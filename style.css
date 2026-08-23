@@ -1,0 +1,263 @@
+/* =========================================
+   CÀI ĐẶT CHUNG (RESET BẢN LỀ, PHÔNG CHỮ)
+========================================= */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #050d14; /* Màu nền xanh đen siêu tối */
+    color: #ffffff;
+    font-family: 'Orbitron', sans-serif; /* Phông chữ viễn tưởng */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* =========================================
+   KHUNG CHÍNH CỦA TRÒ CHƠI
+========================================= */
+.game-container {
+    background: rgba(10, 20, 30, 0.9);
+    border: 2px solid #00f5d4;
+    border-radius: 15px;
+    box-shadow: 0 0 30px rgba(0, 245, 212, 0.2);
+    padding: 30px;
+    width: 480px;
+    text-align: center;
+    position: relative;
+}
+
+/* Ẩn/Hiện các màn hình */
+.screen {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+}
+.screen.active {
+    display: flex;
+}
+
+/* =========================================
+   MÀN HÌNH MENU CHÍNH
+========================================= */
+.game-title {
+    color: #00f5d4;
+    font-size: 40px;
+    text-shadow: 0 0 15px #00f5d4;
+    margin-bottom: 5px;
+    letter-spacing: 2px;
+}
+
+.subtitle {
+    color: #ff2a6d;
+    font-size: 16px;
+    letter-spacing: 4px;
+    margin-bottom: 35px;
+    text-shadow: 0 0 8px #ff2a6d;
+}
+
+.setting-group {
+    margin-bottom: 25px;
+    width: 100%;
+    text-align: left;
+}
+
+.setting-group label {
+    display: block;
+    margin-bottom: 12px;
+    color: #a0c0d0;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    background: #021a24;
+    color: #00f5d4;
+    border: 1px solid #00f5d4;
+    border-radius: 5px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    outline: none;
+    cursor: pointer;
+}
+
+select:focus {
+    box-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
+}
+
+/* Chọn Skin */
+.skin-options {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.skin-label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: #ccc;
+}
+
+.skin-preview {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    margin: 0 8px;
+    border: 2px solid #fff;
+}
+
+.skin-preview.cyan { background-color: #00f5d4; box-shadow: 0 0 10px #00f5d4; }
+.skin-preview.orange { background-color: #ffb800; box-shadow: 0 0 10px #ffb800; }
+.skin-preview.custom { background: #333; text-align: center; line-height: 20px; font-size: 12px; border: none; }
+
+input[type="radio"] {
+    accent-color: #00f5d4;
+}
+
+/* =========================================
+   NÚT BẤM (BUTTONS)
+========================================= */
+.btn {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.btn.primary {
+    background: #00f5d4;
+    color: #050d14;
+    box-shadow: 0 0 15px rgba(0, 245, 212, 0.6);
+}
+.btn.primary:hover {
+    box-shadow: 0 0 25px #00f5d4;
+    transform: scale(1.02);
+}
+
+.btn.secondary {
+    background: transparent;
+    color: #ffb800;
+    border: 2px solid #ffb800;
+    box-shadow: 0 0 10px rgba(255, 184, 0, 0.3);
+}
+.btn.secondary:hover {
+    background: rgba(255, 184, 0, 0.1);
+    box-shadow: 0 0 20px rgba(255, 184, 0, 0.6);
+    transform: scale(1.02);
+}
+
+.btn.danger {
+    background: transparent;
+    color: #ff2a6d;
+    border: 2px solid #ff2a6d;
+    margin-top: 20px;
+}
+.btn.danger:hover {
+    background: rgba(255, 42, 109, 0.1);
+    box-shadow: 0 0 15px rgba(255, 42, 109, 0.5);
+}
+
+.btn-upload {
+    width: 100%;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border: 1px dashed #a0c0d0;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    transition: 0.3s;
+}
+.btn-upload:hover {
+    border-color: #00f5d4;
+    color: #00f5d4;
+}
+
+/* =========================================
+   MÀN HÌNH CHƠI GAME & CANVAS
+========================================= */
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    width: 400px;
+    margin-bottom: 15px;
+}
+
+.score-box {
+    color: #a0c0d0;
+    font-size: 16px;
+    letter-spacing: 1px;
+}
+
+.score-box span {
+    color: #00f5d4;
+    font-weight: bold;
+    font-size: 24px;
+    text-shadow: 0 0 8px #00f5d4;
+    margin-left: 5px;
+}
+
+canvas {
+    border: 2px solid rgba(0, 245, 212, 0.3);
+    border-radius: 5px;
+    background: #02080d;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+}
+
+/* =========================================
+   BẢNG XẾP HẠNG (LEADERBOARD)
+========================================= */
+#leaderboard-screen h2 {
+    color: #ffb800;
+    text-shadow: 0 0 10px #ffb800;
+    margin-bottom: 20px;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 30px;
+}
+
+.leaderboard-table th, 
+.leaderboard-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(0, 245, 212, 0.2);
+    text-align: center;
+}
+
+.leaderboard-table th {
+    color: #ff2a6d;
+    font-size: 14px;
+    letter-spacing: 2px;
+}
+
+.leaderboard-table td {
+    font-size: 16px;
+    color: #fff;
+}
+
+.highlight {
+    color: #00f5d4 !important;
+    font-weight: bold;
+    font-size: 18px !important;
+    text-shadow: 0 0 5px #00f5d4;
+}

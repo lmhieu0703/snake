@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Rắn Săn Mồi Cyberpunk</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="game-container">
+        <!-- MÀN HÌNH MENU CHÍNH -->
+        <div id="menu-screen" class="screen active">
+            <h1 class="game-title">RẮN SĂN MỒI</h1>
+            <p class="subtitle">CYBERPUNK EDITION</p>
+
+            <div class="setting-group">
+                <label>ĐỘ KHÓ:</label>
+                <select id="difficulty">
+                    <option value="120">Dễ (Chậm)</option>
+                    <option value="80" selected>Trung Bình</option>
+                    <option value="40">Khó (Nhanh)</option>
+                </select>
+            </div>
+
+            <div class="setting-group">
+                <label>CHỌN SKIN RẮN:</label>
+                <div class="skin-options">
+                    <label class="skin-label">
+                        <input type="radio" name="skin" value="cyan" checked>
+                        <span class="skin-preview cyan"></span> Xanh Neon
+                    </label>
+                    <label class="skin-label">
+                        <input type="radio" name="skin" value="orange">
+                        <span class="skin-preview orange"></span> Cam Neon
+                    </label>
+                    <label class="skin-label">
+                        <input type="radio" name="skin" value="custom" id="custom-skin-radio">
+                        <span class="skin-preview custom">🖼️</span> Tự Tải Ảnh
+                    </label>
+                </div>
+                <input type="file" id="skin-upload" accept="image/*" style="display: none;">
+                <button type="button" class="btn-upload" onclick="document.getElementById('skin-upload').click()">Tải Ảnh Của Bạn</button>
+            </div>
+
+            <div class="button-group">
+                <button id="btn-start" class="btn primary">CHƠI NGAY</button>
+                <button id="btn-leaderboard" class="btn secondary">BẢNG XẾP HẠNG</button>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH CHƠI GAME -->
+        <div id="game-screen" class="screen hidden">
+            <div class="game-header">
+                <div class="score-box">ĐIỂM: <span id="current-score">0</span></div>
+                <div class="score-box">KỶ LỤC: <span id="high-score">0</span></div>
+            </div>
+
+            <canvas id="game-canvas" width="400" height="400"></canvas>
+
+            <div class="game-footer">
+                <button id="btn-back-menu" class="btn danger">THOÁT RA MENU</button>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH BẢNG XẾP HẠNG ONLINE -->
+        <div id="leaderboard-screen" class="screen hidden">
+            <h2>TOP 5 CAO THỦ ONLINE</h2>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>HẠNG</th>
+                        <th>TÊN</th>
+                        <th>ĐIỂM</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard-body">
+                    <tr><td colspan="3" style="color:#00f5d4;">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+            <button id="btn-close-leaderboard" class="btn primary">QUAY LẠI</button>
+        </div>
+    </div>
+
+    <!-- THƯ VIỆN FIREBASE SDK (BẮT BUỘC ĐẶT TRƯỚC SCRIPT.JS) -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <!-- FILE LOGIC GAME CHÍNH -->
+    <script src="script.js"></script>
+</body>
+</html>
