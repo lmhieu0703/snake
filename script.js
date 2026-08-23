@@ -35,13 +35,15 @@ let isGameOver = false;
 let nextDirection = { x: gridSize, y: 0 };
 let changingDirection = false; 
 
-// ID thiết bị và tên người chơi
+// ID thiết bị duy nhất
 let deviceId = localStorage.getItem('cyberSnakeDeviceId');
 if (!deviceId) {
     deviceId = 'player_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
     localStorage.setItem('cyberSnakeDeviceId', deviceId);
 }
-let lastPlayerName = localStorage.getItem('cyberSnakePlayerName') || "Người chơi";
+
+// Bỏ giá trị mặc định để check xem người chơi đã từng nhập tên chưa
+let lastPlayerName = localStorage.getItem('cyberSnakePlayerName'); 
 
 let currentSkinType = 'color';
 let currentSkinValue = '#00f5d4';
@@ -56,7 +58,6 @@ const highScoreEl = document.getElementById('high-score');
 const difficultySelect = document.getElementById('difficulty');
 const skinUpload = document.getElementById('skin-upload');
 const leaderboardBody = document.getElementById('leaderboard-body');
-
 const customColorPicker = document.getElementById('custom-color-picker');
 const radioColor = document.getElementById('radio-color');
 const radioCustom = document.getElementById('custom-skin-radio');
@@ -72,21 +73,18 @@ document.getElementById('btn-back-menu').addEventListener('click', showMenu);
 document.getElementById('btn-close-leaderboard').addEventListener('click', showMenu);
 document.addEventListener('keydown', handleKeyPress);
 
-// Xử lý khi tải ảnh lên
 skinUpload.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(event) {
             customSkinImage.src = event.target.result;
-            // Tự động tích chọn vào ô Dùng Ảnh
             radioCustom.checked = true;
         }
         reader.readAsDataURL(file);
     }
 });
 
-// Xử lý khi người chơi tự pha màu (tự động tích chọn vào ô Dùng Màu Sắc)
 customColorPicker.addEventListener('input', function() {
     radioColor.checked = true;
 });
@@ -97,12 +95,11 @@ customColorPicker.addEventListener('input', function() {
 function startGame() {
     gameSpeed = parseInt(difficultySelect.value);
     
-    // Kiểm tra xem người chơi đang chọn chế độ màu hay ảnh
     if (radioCustom.checked && customSkinImage.src) {
         currentSkinType = 'image';
     } else {
         currentSkinType = 'color';
-        currentSkinValue = customColorPicker.value; // Lấy mã màu từ Color Picker
+        currentSkinValue = customColorPicker.value;
     }
 
     menuScreen.classList.remove('active');
@@ -255,7 +252,6 @@ function draw() {
         if (currentSkinType === 'image' && customSkinImage.complete && customSkinImage.src) {
             ctx.drawImage(customSkinImage, part.x, part.y, gridSize, gridSize);
         } else {
-            // Hiệu ứng bóng phát sáng theo màu rắn người chơi chọn
             ctx.fillStyle = index === 0 ? '#ffffff' : currentSkinValue;
             ctx.shadowBlur = index === 0 ? 15 : 5;
             ctx.shadowColor = currentSkinValue;
@@ -266,7 +262,7 @@ function draw() {
 }
 
 // ==========================================
-// 6. XỬ LÝ BẢNG XẾP HẠNG ONLINE
+// 6. XỬ LÝ BẢNG XẾP HẠNG ONLINE (TỰ ĐỘNG GHI)
 // ==========================================
 function handleGameOver() {
     isGameOver = true;
@@ -280,14 +276,20 @@ function handleGameOver() {
     
     setTimeout(() => {
         if (score > 0) {
-            let playerName = prompt(`💥 GAME OVER!\nĐiểm của bạn: ${score}\n\nNhập tên để lưu lên BẢNG XẾP HẠNG (Chỉ giữ kỷ lục cao nhất):`, lastPlayerName);
-            
-            if (playerName && playerName.trim() !== "") {
-                lastPlayerName = playerName.trim();
-                localStorage.setItem('cyberSnakePlayerName', lastPlayerName); 
-                saveScoreOnline(lastPlayerName, score);
+            // KIỂM TRA: Nếu chưa từng nhập tên thì hỏi 1 lần duy nhất
+            if (!lastPlayerName) {
+                let playerName = prompt(`💥 GAME OVER!\nĐiểm ván này: ${score}\n\nHãy nhập tên để lưu lên BẢNG XẾP HẠNG (Chỉ hỏi 1 lần duy nhất):`, "Người chơi");
+                
+                if (playerName && playerName.trim() !== "") {
+                    lastPlayerName = playerName.trim();
+                    localStorage.setItem('cyberSnakePlayerName', lastPlayerName); 
+                    saveScoreOnline(lastPlayerName, score);
+                } else {
+                    showMenu(); 
+                }
             } else {
-                showMenu(); 
+                // ĐÃ TỪNG NHẬP TÊN RỒI -> Tự động lưu ngầm không cần hỏi
+                saveScoreOnline(lastPlayerName, score);
             }
         } else {
             alert("💥 GAME OVER!\nBạn được 0 điểm. Chưa đủ trình lên Bảng Xếp Hạng đâu sếp ơi!");
@@ -302,19 +304,27 @@ function saveScoreOnline(name, playerScore) {
     userRef.once('value').then((snapshot) => {
         const data = snapshot.val();
         
+        // Nếu điểm cao hơn kỷ lục cũ (hoặc chơi lần đầu), thì lưu lên máy chủ
         if (!data || playerScore > data.score) {
             userRef.set({
                 name: name.substring(0, 15),
                 score: playerScore,
                 timestamp: Date.now()
             }).then(() => {
+                // Thông báo tự động bóp kỷ lục
+                if (data) {
+                    alert(`🎉 PHÁ KỶ LỤC CÁ NHÂN!\nKỷ lục mới ${playerScore} điểm của sếp đã được tự động lưu lên máy chủ!`);
+                } else {
+                    alert(`✅ Kỷ lục ${playerScore} điểm đã được lưu. Từ giờ hệ thống sẽ tự động cập nhật nếu sếp vượt kỷ lục này!`);
+                }
                 showLeaderboard();
             }).catch((err) => {
                 alert("Lỗi kết nối máy chủ! " + err.message);
                 showMenu();
             });
         } else {
-            alert(`Kỷ lục cũ của bạn là ${data.score} điểm. Ván này chưa vượt được rồi!`);
+            // Điểm thấp hơn -> Không lưu, báo nhẹ cho người chơi
+            alert(`💥 GAME OVER!\nĐiểm ván này: ${playerScore}\nKỷ lục hiện tại của sếp vẫn là ${data.score} điểm. Cố lên nhé!`);
             showLeaderboard();
         }
     });
