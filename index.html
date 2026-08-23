@@ -23,16 +23,20 @@
                 </select>
             </div>
 
+            <!-- PHẦN CHỌN MÀU TỰ DO VÀ ẢNH MỚI -->
             <div class="setting-group">
-                <label>CHỌN SKIN RẮN:</label>
+                <label>CHỌN MÀU RẮN TỰ DO:</label>
+                <div class="color-picker-container">
+                    <!-- Bảng chọn màu tự do (như ảnh sếp gửi) -->
+                    <input type="color" id="custom-color-picker" value="#00f5d4" title="Bấm vào để tự pha màu!">
+                    <span class="color-hint">Bấm vào ô màu để pha màu tùy thích</span>
+                </div>
+
+                <label style="margin-top: 15px;">HOẶC DÙNG ẢNH CỦA BẠN:</label>
                 <div class="skin-options">
                     <label class="skin-label">
-                        <input type="radio" name="skin" value="cyan" checked>
-                        <span class="skin-preview cyan"></span> Xanh Neon
-                    </label>
-                    <label class="skin-label">
-                        <input type="radio" name="skin" value="orange">
-                        <span class="skin-preview orange"></span> Cam Neon
+                        <input type="radio" name="skin" value="color" id="radio-color" checked>
+                        <span>Dùng Màu Sắc</span>
                     </label>
                     <label class="skin-label">
                         <input type="radio" name="skin" value="custom" id="custom-skin-radio">
@@ -82,7 +86,7 @@
         </div>
     </div>
 
-    <!-- THƯ VIỆN FIREBASE SDK (BẮT BUỘC ĐẶT TRƯỚC SCRIPT.JS) -->
+    <!-- THƯ VIỆN FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 

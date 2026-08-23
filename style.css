@@ -92,7 +92,44 @@ select:focus {
     box-shadow: 0 0 10px rgba(0, 245, 212, 0.5);
 }
 
-/* Chọn Skin */
+/* =========================================
+   CHỌN MÀU TỰ DO VÀ ẢNH
+========================================= */
+.color-picker-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background: #021a24;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #333;
+    margin-bottom: 15px;
+}
+
+input[type="color"] {
+    appearance: none;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 5px;
+    cursor: pointer;
+    background: transparent;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+    border: 2px solid #fff;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+.color-hint {
+    color: #888;
+    font-size: 13px;
+    font-style: italic;
+}
+
 .skin-options {
     display: flex;
     justify-content: space-between;
@@ -116,8 +153,6 @@ select:focus {
     border: 2px solid #fff;
 }
 
-.skin-preview.cyan { background-color: #00f5d4; box-shadow: 0 0 10px #00f5d4; }
-.skin-preview.orange { background-color: #ffb800; box-shadow: 0 0 10px #ffb800; }
 .skin-preview.custom { background: #333; text-align: center; line-height: 20px; font-size: 12px; border: none; }
 
 input[type="radio"] {

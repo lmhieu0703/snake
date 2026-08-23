@@ -11,7 +11,6 @@ const firebaseConfig = {
   appId: "1:498997200625:web:9a8260bb3e5d35a2264b50"
 };
 
-// Khởi tạo Firebase (chỉ khởi tạo nếu chưa có)
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -34,8 +33,16 @@ let gameInterval;
 let gameSpeed = 80;
 let isGameOver = false;
 let nextDirection = { x: gridSize, y: 0 };
+let changingDirection = false; 
 
-// Quản lý Skin Rắn
+// ID thiết bị và tên người chơi
+let deviceId = localStorage.getItem('cyberSnakeDeviceId');
+if (!deviceId) {
+    deviceId = 'player_' + Date.now() + '_' + Math.floor(Math.random() * 10000);
+    localStorage.setItem('cyberSnakeDeviceId', deviceId);
+}
+let lastPlayerName = localStorage.getItem('cyberSnakePlayerName') || "Người chơi";
+
 let currentSkinType = 'color';
 let currentSkinValue = '#00f5d4';
 let customSkinImage = new Image();
@@ -47,9 +54,12 @@ const leaderboardScreen = document.getElementById('leaderboard-screen');
 const scoreEl = document.getElementById('current-score');
 const highScoreEl = document.getElementById('high-score');
 const difficultySelect = document.getElementById('difficulty');
-const skinRadios = document.getElementsByName('skin');
 const skinUpload = document.getElementById('skin-upload');
 const leaderboardBody = document.getElementById('leaderboard-body');
+
+const customColorPicker = document.getElementById('custom-color-picker');
+const radioColor = document.getElementById('radio-color');
+const radioCustom = document.getElementById('custom-skin-radio');
 
 highScoreEl.textContent = highScore;
 
@@ -62,41 +72,37 @@ document.getElementById('btn-back-menu').addEventListener('click', showMenu);
 document.getElementById('btn-close-leaderboard').addEventListener('click', showMenu);
 document.addEventListener('keydown', handleKeyPress);
 
-// Xử lý upload ảnh làm skin
+// Xử lý khi tải ảnh lên
 skinUpload.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(event) {
             customSkinImage.src = event.target.result;
-            document.getElementById('custom-skin-radio').checked = true;
+            // Tự động tích chọn vào ô Dùng Ảnh
+            radioCustom.checked = true;
         }
         reader.readAsDataURL(file);
     }
+});
+
+// Xử lý khi người chơi tự pha màu (tự động tích chọn vào ô Dùng Màu Sắc)
+customColorPicker.addEventListener('input', function() {
+    radioColor.checked = true;
 });
 
 // ==========================================
 // 4. CHUYỂN ĐỔI MÀN HÌNH
 // ==========================================
 function startGame() {
-    // Lấy độ khó
     gameSpeed = parseInt(difficultySelect.value);
     
-    // Lấy Skin
-    let selectedSkin = 'cyan';
-    for(let radio of skinRadios) {
-        if(radio.checked) {
-            selectedSkin = radio.value;
-            break;
-        }
-    }
-    
-    if (selectedSkin === 'custom' && customSkinImage.src) {
+    // Kiểm tra xem người chơi đang chọn chế độ màu hay ảnh
+    if (radioCustom.checked && customSkinImage.src) {
         currentSkinType = 'image';
     } else {
         currentSkinType = 'color';
-        if (selectedSkin === 'orange') currentSkinValue = '#ffb800';
-        else currentSkinValue = '#00f5d4'; // cyan default
+        currentSkinValue = customColorPicker.value; // Lấy mã màu từ Color Picker
     }
 
     menuScreen.classList.remove('active');
@@ -104,6 +110,7 @@ function startGame() {
     gameScreen.classList.remove('hidden');
     gameScreen.classList.add('active');
     
+    window.focus(); 
     resetGame();
 }
 
@@ -137,6 +144,7 @@ function resetGame() {
     dx = gridSize;
     dy = 0;
     nextDirection = { x: gridSize, y: 0 };
+    changingDirection = false;
     score = 0;
     isGameOver = false;
     scoreEl.textContent = score;
@@ -147,112 +155,123 @@ function resetGame() {
 }
 
 function placeFood() {
-    food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
-    food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
-    // Đảm bảo thức ăn không đè lên thân rắn
-    for (let part of snake) {
-        if (part.x === food.x && part.y === food.y) {
-            placeFood();
-            return;
+    let isOccupied = true;
+    let attempts = 0;
+    
+    while(isOccupied && attempts < 1000) {
+        food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+        food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+        isOccupied = false;
+        
+        for (let part of snake) {
+            if (part.x === food.x && part.y === food.y) {
+                isOccupied = true;
+                break;
+            }
         }
+        attempts++;
     }
 }
 
 function handleKeyPress(e) {
-    if (isGameOver) return;
+    if (isGameOver || changingDirection) return;
+    
     const LEFT_KEY = 37;
     const RIGHT_KEY = 39;
     const UP_KEY = 38;
     const DOWN_KEY = 40;
 
     const keyPressed = e.keyCode;
-    // Chặn việc đi ngược lại hướng hiện tại để tránh tự cắn mình
-    if (keyPressed === LEFT_KEY && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; }
-    if (keyPressed === UP_KEY && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; }
-    if (keyPressed === RIGHT_KEY && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; }
-    if (keyPressed === DOWN_KEY && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; }
+    const goingUp = dy === -gridSize;
+    const goingDown = dy === gridSize;
+    const goingRight = dx === gridSize;
+    const goingLeft = dx === -gridSize;
+
+    if([37, 38, 39, 40].includes(keyPressed)) {
+        e.preventDefault(); 
+    }
+
+    if (keyPressed === LEFT_KEY && !goingRight) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; }
+    if (keyPressed === UP_KEY && !goingDown) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; }
+    if (keyPressed === RIGHT_KEY && !goingLeft) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; }
+    if (keyPressed === DOWN_KEY && !goingUp) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; }
 }
 
 function gameLoop() {
     if (isGameOver) return;
     
+    changingDirection = false; 
     dx = nextDirection.x;
     dy = nextDirection.y;
     
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-    snake.unshift(head); // Thêm đầu mới
+    snake.unshift(head);
     
-    // Nếu ăn được mồi
     if (head.x === food.x && head.y === food.y) {
         score += 10;
         scoreEl.textContent = score;
         placeFood();
     } else {
-        snake.pop(); // Xóa đuôi nếu không ăn
+        snake.pop();
     }
     
     checkCollision();
+    if (isGameOver) return; 
+    
     draw();
 }
 
 function checkCollision() {
     const head = snake[0];
-    // Đụng tường
     if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
         handleGameOver();
+        return;
     }
-    // Đụng thân
     for (let i = 1; i < snake.length; i++) {
         if (head.x === snake[i].x && head.y === snake[i].y) {
             handleGameOver();
+            return;
         }
     }
 }
 
 function draw() {
-    // Xóa nền cũ (Màu đen sâu)
     ctx.fillStyle = '#02080d';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Vẽ lưới Cyberpunk mờ mờ
     ctx.strokeStyle = 'rgba(0, 245, 212, 0.05)';
     for(let i = 0; i <= canvas.width; i += gridSize) {
         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
     }
 
-    // Vẽ mồi (Màu hồng Neon)
     ctx.fillStyle = '#ff2a6d';
     ctx.shadowBlur = 15;
     ctx.shadowColor = '#ff2a6d';
     ctx.fillRect(food.x, food.y, gridSize, gridSize);
     ctx.shadowBlur = 0;
     
-    // Vẽ rắn
     snake.forEach((part, index) => {
         if (currentSkinType === 'image' && customSkinImage.complete && customSkinImage.src) {
-            // Vẽ Skin bằng ảnh
             ctx.drawImage(customSkinImage, part.x, part.y, gridSize, gridSize);
         } else {
-            // Vẽ Skin bằng màu Neon
-            ctx.fillStyle = index === 0 ? '#ffffff' : currentSkinValue; // Đầu rắn màu trắng
+            // Hiệu ứng bóng phát sáng theo màu rắn người chơi chọn
+            ctx.fillStyle = index === 0 ? '#ffffff' : currentSkinValue;
             ctx.shadowBlur = index === 0 ? 15 : 5;
             ctx.shadowColor = currentSkinValue;
-            // Trừ 1px để thấy rõ từng đốt rắn
-            ctx.fillRect(part.x, part.y, gridSize - 1, gridSize - 1); 
+            ctx.fillRect(part.x, part.y, gridSize - 1, gridSize - 1);
             ctx.shadowBlur = 0;
         }
     });
 }
 
 // ==========================================
-// 6. XỬ LÝ BẢNG XẾP HẠNG ONLINE (FIREBASE)
+// 6. XỬ LÝ BẢNG XẾP HẠNG ONLINE
 // ==========================================
 function handleGameOver() {
     isGameOver = true;
     clearInterval(gameInterval);
     
-    // Lưu kỷ lục cá nhân vào máy
     if (score > highScore) {
         highScore = score;
         localStorage.setItem('cyberSnakeHighScore', highScore);
@@ -260,33 +279,49 @@ function handleGameOver() {
     }
     
     setTimeout(() => {
-        let playerName = prompt(`GAME OVER!\nBạn đạt ${score} điểm.\nHãy nhập tên để lưu lên BẢNG XẾP HẠNG ONLINE:`, "Người chơi");
-        
-        if (playerName && playerName.trim() !== "") {
-            saveScoreOnline(playerName.trim(), score);
+        if (score > 0) {
+            let playerName = prompt(`💥 GAME OVER!\nĐiểm của bạn: ${score}\n\nNhập tên để lưu lên BẢNG XẾP HẠNG (Chỉ giữ kỷ lục cao nhất):`, lastPlayerName);
+            
+            if (playerName && playerName.trim() !== "") {
+                lastPlayerName = playerName.trim();
+                localStorage.setItem('cyberSnakePlayerName', lastPlayerName); 
+                saveScoreOnline(lastPlayerName, score);
+            } else {
+                showMenu(); 
+            }
         } else {
+            alert("💥 GAME OVER!\nBạn được 0 điểm. Chưa đủ trình lên Bảng Xếp Hạng đâu sếp ơi!");
             showMenu();
         }
-    }, 300);
+    }, 100);
 }
 
-// Đẩy điểm lên máy chủ Firebase
 function saveScoreOnline(name, playerScore) {
-    database.ref('leaderboard').push({
-        name: name.substring(0, 15), // Giới hạn tên 15 ký tự
-        score: playerScore,
-        timestamp: Date.now()
-    }).then(() => {
-        showLeaderboard(); // Chuyển sang xem bảng xếp hạng
-    }).catch((err) => {
-        alert("Lỗi kết nối máy chủ! " + err.message);
-        showMenu();
+    const userRef = database.ref('leaderboard/' + deviceId);
+    
+    userRef.once('value').then((snapshot) => {
+        const data = snapshot.val();
+        
+        if (!data || playerScore > data.score) {
+            userRef.set({
+                name: name.substring(0, 15),
+                score: playerScore,
+                timestamp: Date.now()
+            }).then(() => {
+                showLeaderboard();
+            }).catch((err) => {
+                alert("Lỗi kết nối máy chủ! " + err.message);
+                showMenu();
+            });
+        } else {
+            alert(`Kỷ lục cũ của bạn là ${data.score} điểm. Ván này chưa vượt được rồi!`);
+            showLeaderboard();
+        }
     });
 }
 
-// Lấy Top 5 từ Firebase và hiển thị
 function updateLeaderboardUI() {
-    leaderboardBody.innerHTML = '<tr><td colspan="3" style="color:#00f5d4;">Đang tải dữ liệu kết nối toàn cầu...</td></tr>';
+    leaderboardBody.innerHTML = '<tr><td colspan="3" style="color:#00f5d4;">Đang kết nối toàn cầu...</td></tr>';
     
     database.ref('leaderboard').orderByChild('score').limitToLast(20).once('value', (snapshot) => {
         let scores = [];
@@ -294,13 +329,10 @@ function updateLeaderboardUI() {
             scores.push(child.val());
         });
         
-        // Sắp xếp điểm giảm dần (Điểm cao nhất lên đầu)
         scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5); 
         
-        // Lấy đúng Top 5
-        scores = scores.slice(0, 5);
-        
-        leaderboardBody.innerHTML = ''; // Xóa chữ "Đang tải"
+        leaderboardBody.innerHTML = ''; 
         
         if (scores.length === 0) {
             leaderboardBody.innerHTML = '<tr><td colspan="3">Chưa có ai ghi danh</td></tr>';
@@ -309,7 +341,6 @@ function updateLeaderboardUI() {
         
         scores.forEach((entry, index) => {
             let tr = document.createElement('tr');
-            // Hiệu ứng màu vàng cho Top 1
             let rankStyle = index === 0 ? 'style="color: #ffb800; font-weight: bold; text-shadow: 0 0 10px #ffb800;"' : '';
             
             tr.innerHTML = `
