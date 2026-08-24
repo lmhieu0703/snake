@@ -36,6 +36,7 @@ let gameInterval, gameSpeed = 100;
 let isGameOver = false;
 let nextDirection = { x: gridSize, y: 0 };
 let changingDirection = false; 
+let isMoving = false; // CỜ HIỆU ĐỨNG IM CHỜ LỆNH
 
 // Hồi sinh & Skin
 let reviveCost = 1;
@@ -43,7 +44,7 @@ let rainbowReviveUsed = false;
 let currentSkinType = 'color'; // 'color', 'custom', 'rainbow'
 let currentSkinValue = '#00f5d4';
 let customSkinImage = new Image();
-let rainbowHue = 0; // Để tạo hiệu ứng đổi màu 7 sắc cầu vồng
+let rainbowHue = 0; // Để tạo hiệu ứng đổi màu 7 sắc
 
 // UI Elements
 const els = {
@@ -62,13 +63,8 @@ const els = {
 // 3. HỆ THỐNG TÀI KHOẢN & VÍ TIỀN
 // ==========================================
 window.onload = () => {
-    if (!uid) {
-        els.login.classList.add('active');
-    } else {
-        els.login.classList.remove('active');
-        els.login.classList.add('hidden');
-        loadUserData();
-    }
+    if (!uid) { els.login.classList.add('active'); } 
+    else { els.login.classList.remove('active'); els.login.classList.add('hidden'); loadUserData(); }
 };
 
 document.getElementById('btn-login').onclick = () => {
@@ -79,50 +75,38 @@ document.getElementById('btn-login').onclick = () => {
     localStorage.setItem('cyberSnakeUid', uid);
     
     db.ref(`users/${uid}`).set({
-        name: name,
-        score: 0,
-        money: 0,
-        hasRainbow: false
+        name: name, score: 0, money: 0, hasRainbow: false
     }).then(() => {
         alert("🎉 Đăng ký thành công! Chào mừng gia nhập Cyberpunk!");
-        els.login.classList.remove('active');
-        els.login.classList.add('hidden');
+        els.login.classList.remove('active'); els.login.classList.add('hidden');
         loadUserData();
     });
 };
 
 function loadUserData() {
-    els.profile.classList.remove('hidden');
-    els.menu.classList.remove('hidden');
-    els.menu.classList.add('active');
+    els.profile.classList.remove('hidden'); els.menu.classList.remove('hidden'); els.menu.classList.add('active');
     
     db.ref(`users/${uid}`).on('value', snap => {
         if (!snap.exists()) return;
         let data = snap.val();
-        playerName = data.name;
-        playerMoney = data.money || 0;
-        playerHighScore = data.score || 0;
-        hasRainbow = data.hasRainbow || false;
+        playerName = data.name; playerMoney = data.money || 0;
+        playerHighScore = data.score || 0; hasRainbow = data.hasRainbow || false;
 
         document.getElementById('display-name').innerText = playerName;
         document.getElementById('display-money').innerText = playerMoney;
         document.getElementById('high-score').innerText = playerHighScore;
 
-        // Cập nhật Cửa hàng Rainbow
         let rBtn = document.getElementById('btn-buy-rainbow');
         let rRadio = document.getElementById('radio-rainbow');
         let rText = document.getElementById('rainbow-text');
         
         if (hasRainbow) {
             rBtn.innerText = "✅ ĐÃ SỞ HỮU RAINBOW (SKIN & HỒI SINH TỰ ĐỘNG)";
-            rBtn.disabled = true;
-            rBtn.style.opacity = "0.5";
-            rRadio.disabled = false;
-            rText.innerText = "🌈 Chế độ Rainbow";
+            rBtn.disabled = true; rBtn.style.opacity = "0.5";
+            rRadio.disabled = false; rText.innerText = "🌈 Chế độ Rainbow";
         }
     });
 
-    // Check Hộp Thư
     db.ref(`notifications/${uid}`).on('value', snap => {
         let unread = 0;
         snap.forEach(child => { if (!child.val().isRead) unread++; });
@@ -130,25 +114,19 @@ function loadUserData() {
         if (unread > 0) { badge.innerText = unread; badge.classList.remove('hidden'); }
         else { badge.classList.add('hidden'); }
     });
-
-    // Chạy ngầm Check Top 3 mỗi giờ
     setInterval(checkHourlyTop3, 60000); 
 }
 
 // ==========================================
 // 4. KINH TẾ: SKIN, CHUYỂN TIỀN, HỘP THƯ, CODE
 // ==========================================
-
-// Mua Rainbow (100$)
 document.getElementById('btn-buy-rainbow').onclick = () => {
     if (hasRainbow) return;
     if (playerMoney < 100) return alert("❌ Bạn không đủ 100$! Cày thêm hoặc xin bạn bè đi sếp.");
-    db.ref(`users/${uid}/money`).set(playerMoney - 100);
-    db.ref(`users/${uid}/hasRainbow`).set(true);
+    db.ref(`users/${uid}/money`).set(playerMoney - 100); db.ref(`users/${uid}/hasRainbow`).set(true);
     alert("🎉 ĐÃ MỞ KHÓA SKIN RAINBOW! Bạn có 1 lượt hồi sinh MIỄN PHÍ mỗi ván game!");
 };
 
-// Chọn Radio Skin
 document.querySelectorAll('input[name="skin"]').forEach(radio => {
     radio.addEventListener('change', (e) => {
         document.getElementById('color-picker-box').style.display = (e.target.value === 'color') ? 'flex' : 'none';
@@ -156,26 +134,20 @@ document.querySelectorAll('input[name="skin"]').forEach(radio => {
     });
 });
 
-// Up Ảnh Custom (-50$)
 document.getElementById('skin-upload').addEventListener('change', function(e) {
-    if (playerMoney < 50) {
-        alert("❌ Bạn cần 50$ để tải ảnh skin mới!");
-        document.getElementById('radio-color').checked = true; // Trả về màu mặc định
-        return;
-    }
+    if (playerMoney < 50) { alert("❌ Bạn cần 50$ để tải ảnh skin mới!"); document.getElementById('radio-color').checked = true; return; }
     const file = e.target.files[0];
     if (file) {
         const reader = new FileReader();
         reader.onload = function(event) {
             customSkinImage.src = event.target.result;
-            db.ref(`users/${uid}/money`).set(playerMoney - 50); // Trừ 50$
+            db.ref(`users/${uid}/money`).set(playerMoney - 50);
             alert("✅ Đã cập nhật ảnh Skin và trừ 50$!");
         }
         reader.readAsDataURL(file);
     }
 });
 
-// Chuyển Tiền
 document.getElementById('btn-submit-transfer').onclick = () => {
     let targetName = document.getElementById('transfer-receiver').value.trim();
     let amount = parseInt(document.getElementById('transfer-amount').value);
@@ -188,28 +160,22 @@ document.getElementById('btn-submit-transfer').onclick = () => {
         if(!snap.exists()) return alert("❌ Không tìm thấy người chơi mang tên này!");
         let targetId = Object.keys(snap.val())[0];
         
-        db.ref(`users/${uid}/money`).set(playerMoney - amount); // Trừ tiền người gửi
-        db.ref(`notifications/${targetId}`).push({ // Gửi thư cho người nhận
-            sender: playerName, amount: amount, isRead: false, timestamp: Date.now()
-        });
+        db.ref(`users/${uid}/money`).set(playerMoney - amount); 
+        db.ref(`notifications/${targetId}`).push({ sender: playerName, amount: amount, isRead: false, timestamp: Date.now() });
         alert(`✅ Đã chuyển thành công ${amount}$ cho ${targetName}!`);
         document.getElementById('transfer-amount').value = '';
     });
 };
 
-// Mở Hộp Thư
 document.getElementById('btn-inbox').onclick = () => {
     switchScreen('inbox-screen');
     db.ref(`notifications/${uid}`).once('value', snap => {
-        const list = document.getElementById('inbox-list');
-        list.innerHTML = '';
+        const list = document.getElementById('inbox-list'); list.innerHTML = '';
         if (!snap.exists()) { list.innerHTML = '<p style="color:#888;">Hộp thư trống!</p>'; return; }
         
-        // Đảo ngược để thư mới lên đầu
         let msgs = []; snap.forEach(c => msgs.push({id: c.key, ...c.val()}));
         msgs.reverse().forEach(msg => {
-            let div = document.createElement('div');
-            div.className = 'inbox-item';
+            let div = document.createElement('div'); div.className = 'inbox-item';
             div.innerHTML = `
                 <div><span class="sender">Từ: ${msg.sender}</span>
                 <span class="amount">+${msg.amount}$</span></div>
@@ -224,11 +190,9 @@ document.getElementById('btn-inbox').onclick = () => {
 window.claimMail = function(mailId, amount) {
     db.ref(`users/${uid}/money`).set(playerMoney + amount);
     db.ref(`notifications/${uid}/${mailId}/isRead`).set(true);
-    alert(`💰 Đã nhận ${amount}$ vào ví!`);
-    document.getElementById('btn-inbox').click(); // Tải lại thư
+    alert(`💰 Đã nhận ${amount}$ vào ví!`); document.getElementById('btn-inbox').click();
 };
 
-// Nhập Code Admin
 document.getElementById('btn-submit-code').onclick = () => {
     let code = document.getElementById('giftcode-input').value.trim().toUpperCase();
     if(!code) return;
@@ -238,7 +202,6 @@ document.getElementById('btn-submit-code').onclick = () => {
         let cData = snap.val();
         if(cData.usedBy !== false) return alert(`❌ Code này đã bị người chơi [${cData.usedBy}] nhập mất rồi! Chậm tay quá sếp ơi!`);
         
-        // Cập nhật trạng thái code thành ĐÃ DÙNG và cộng tiền
         db.ref(`storage_data/codes/${code}`).update({ usedBy: playerName, usedAt: Date.now() });
         db.ref(`users/${uid}/money`).set(playerMoney + cData.amount);
         alert(`🎉 VÀO VIỆC! Búp được ${cData.amount}$ từ mã code ${code}!`);
@@ -250,7 +213,6 @@ document.getElementById('btn-submit-code').onclick = () => {
 // 5. CƠ CHẾ GAMEPLAY RẮN SĂN MỒI
 // ==========================================
 document.getElementById('btn-start').onclick = () => {
-    // Check cài đặt
     gameSpeed = parseInt(document.getElementById('difficulty').value);
     currentPtsPerFood = parseInt(document.getElementById('difficulty').options[document.getElementById('difficulty').selectedIndex].dataset.pts);
     
@@ -267,6 +229,9 @@ function resetGame() {
     snake = [ {x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160} ];
     dx = gridSize; dy = 0; nextDirection = { x: gridSize, y: 0 };
     score = 0; reviveCost = 1; rainbowReviveUsed = false; changingDirection = false; isGameOver = false;
+    
+    isMoving = false; // 🔥 BẮT ĐẦU: RẮN ĐỨNG IM CHỜ LỆNH
+    
     document.getElementById('current-score').innerText = score;
     els.reviveModal.classList.add('hidden');
     
@@ -283,12 +248,17 @@ function placeFood() {
 function gameLoop() {
     if (isGameOver) return;
     
+    // Nếu chưa bấm phím/vuốt, rắn chỉ vẽ nguyên tại chỗ (để nhấp nháy 7 màu)
+    if (!isMoving) {
+        draw(); 
+        return; 
+    }
+    
     changingDirection = false; 
     dx = nextDirection.x; dy = nextDirection.y;
     
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
     
-    // Xuyên tường hay đâm tường? Sếp yêu cầu đâm tường chết:
     if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollision(head)) {
         triggerDeath(); return;
     }
@@ -312,24 +282,19 @@ function checkCollision(head) {
 }
 
 function draw() {
-    ctx.fillStyle = '#02080d';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#02080d'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Kẻ caro
     ctx.strokeStyle = 'rgba(0, 245, 212, 0.05)';
     for(let i = 0; i <= canvas.width; i += gridSize) {
         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
     }
 
-    // Vẽ Food
     ctx.fillStyle = '#ff2a6d'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff2a6d';
-    ctx.fillRect(food.x, food.y, gridSize, gridSize);
-    ctx.shadowBlur = 0;
+    ctx.fillRect(food.x, food.y, gridSize, gridSize); ctx.shadowBlur = 0;
     
-    rainbowHue = (rainbowHue + 5) % 360; // Tạo màu 7 sắc
+    rainbowHue = (rainbowHue + 5) % 360; 
 
-    // Vẽ Rắn
     snake.forEach((part, index) => {
         if (currentSkinType === 'custom' && customSkinImage.src) {
             ctx.drawImage(customSkinImage, part.x, part.y, gridSize, gridSize);
@@ -346,32 +311,35 @@ function draw() {
     });
 }
 
-// Điều khiển phím và vuốt cảm ứng
+// ==========================================
+// CƠ CHẾ ĐIỀU KHIỂN BẺ LÁI (PHÁT ĐỘNG IS_MOVING)
+// ==========================================
 document.addEventListener('keydown', e => {
     if (isGameOver || changingDirection) return;
     const key = e.keyCode;
     if([37, 38, 39, 40].includes(key)) e.preventDefault(); 
-    if (key === 37 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; } // Trái
-    if (key === 38 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; } // Lên
-    if (key === 39 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; } // Phải
-    if (key === 40 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; } // Xuống
+    
+    // Nếu bấm đúng hướng hợp lệ -> Bật cờ isMoving = true để rắn bắt đầu phi
+    if (key === 37 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; isMoving = true;} // Trái
+    if (key === 38 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; isMoving = true;} // Lên
+    if (key === 39 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; isMoving = true;} // Phải
+    if (key === 40 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; isMoving = true;} // Xuống
 });
 
-// Vuốt cảm ứng (Di động)
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: false});
-canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false}); // Chống cuộn web
+canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false}); 
 canvas.addEventListener('touchend', e => {
     let touchEndX = e.changedTouches[0].screenX, touchEndY = e.changedTouches[0].screenY;
     let diffX = touchEndX - touchStartX, diffY = touchEndY - touchStartY;
+    
     if(Math.abs(diffX) > Math.abs(diffY)) {
-        if(diffX > 30 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; }
-        else if (diffX < -30 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; }
+        if(diffX > 30 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; isMoving = true;}
+        else if (diffX < -30 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; isMoving = true;}
     } else {
-        if(diffY > 30 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; }
-        else if (diffY < -30 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; }
+        if(diffY > 30 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; isMoving = true;}
+        else if (diffY < -30 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; isMoving = true;}
     }
-    changingDirection = true;
 });
 
 // ==========================================
@@ -382,7 +350,6 @@ function triggerDeath() {
     clearInterval(gameInterval);
     document.getElementById('dead-score').innerText = score;
     
-    // Logic hiển thị Hồi sinh
     let freeMsg = document.getElementById('rainbow-free-msg');
     let priceText = document.getElementById('revive-price');
     
@@ -396,7 +363,7 @@ function triggerDeath() {
     els.reviveModal.classList.remove('hidden');
 }
 
-// Bấm Hồi Sinh
+// 🔥 NÚT HỒI SINH (RESTART THÂN RẮN & CHỜ LỆNH)
 document.getElementById('btn-do-revive').onclick = () => {
     let cost = (hasRainbow && !rainbowReviveUsed) ? 0 : reviveCost;
     
@@ -404,30 +371,35 @@ document.getElementById('btn-do-revive').onclick = () => {
     
     if (cost > 0) {
         db.ref(`users/${uid}/money`).set(playerMoney - cost);
-        reviveCost *= 2; // Nhân đôi phí lần sau
+        reviveCost *= 2; 
     } else {
-        rainbowReviveUsed = true; // Hết free
+        rainbowReviveUsed = true; 
     }
     
-    // Cắt bỏ cái đầu đâm tường, thụt lùi lại 1 ô
-    snake.shift(); 
+    // Tái tạo lại con rắn nhỏ 3 đốt ở giữa màn hình
+    snake = [ {x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160} ];
+    dx = gridSize; 
+    dy = 0; 
+    nextDirection = { x: gridSize, y: 0 };
+    
+    isMoving = false; // ĐƯA VỀ TRẠNG THÁI ĐỨNG IM CHỜ SẾP VUỐT
     isGameOver = false;
+    
     els.reviveModal.classList.add('hidden');
-    gameInterval = setInterval(gameLoop, gameSpeed); // Chạy tiếp
+    clearInterval(gameInterval);
+    gameInterval = setInterval(gameLoop, gameSpeed); 
+    draw(); // Vẽ con rắn ra ngay để chuẩn bị
 };
 
-// Bấm Chết Luôn
 document.getElementById('btn-die').onclick = () => {
     els.reviveModal.classList.add('hidden');
     
-    // Thưởng 10$ cho mỗi 1000 điểm
     let bonus1000 = Math.floor(score / 1000) * 10;
     if (bonus1000 > 0) {
         db.ref(`users/${uid}/money`).set(playerMoney + bonus1000);
         alert(`🎁 CHƠI HAY LẮM! Đạt mốc nghìn điểm, hệ thống thưởng nóng ${bonus1000}$`);
     }
 
-    // Cập nhật kỷ lục
     if (score > playerHighScore) {
         db.ref(`users/${uid}/score`).set(score);
         alert(`🏆 PHÁ KỶ LỤC CÁ NHÂN: ${score} ĐIỂM!`);
@@ -440,14 +412,10 @@ document.getElementById('btn-back-menu').onclick = () => { if(confirm("Đầu h�
 // ==========================================
 // 7. BẢNG XẾP HẠNG ĐÔI & TOP 3 TỰ ĐỘNG
 // ==========================================
-let currentLbTab = 'score'; // 'score' hoặc 'money'
+let currentLbTab = 'score'; 
 let lbInterval, timerInterval;
 
-document.getElementById('btn-leaderboard').onclick = () => {
-    switchScreen('leaderboard-screen');
-    startLeaderboard();
-};
-
+document.getElementById('btn-leaderboard').onclick = () => { switchScreen('leaderboard-screen'); startLeaderboard(); };
 document.getElementById('tab-score').onclick = () => { currentLbTab = 'score'; changeTab(); };
 document.getElementById('tab-money').onclick = () => { currentLbTab = 'money'; changeTab(); };
 
@@ -459,26 +427,19 @@ function changeTab() {
 }
 
 function startLeaderboard() {
-    fetchLeaderboard();
-    let timeLeft = 5;
-    
+    fetchLeaderboard(); let timeLeft = 5;
     clearInterval(lbInterval); clearInterval(timerInterval);
     
     timerInterval = setInterval(() => {
-        timeLeft--;
-        document.getElementById('lb-timer').innerText = timeLeft;
-        if (timeLeft <= 0) {
-            timeLeft = 5;
-            fetchLeaderboard();
-        }
+        timeLeft--; document.getElementById('lb-timer').innerText = timeLeft;
+        if (timeLeft <= 0) { timeLeft = 5; fetchLeaderboard(); }
     }, 1000);
 }
 
 function fetchLeaderboard() {
     db.ref('users').orderByChild(currentLbTab).limitToLast(10).once('value', snap => {
         const tbody = document.getElementById('leaderboard-body');
-        let arr = [];
-        snap.forEach(c => arr.push(c.val()));
+        let arr = []; snap.forEach(c => arr.push(c.val()));
         arr.sort((a, b) => b[currentLbTab] - a[currentLbTab]);
         
         tbody.innerHTML = '';
@@ -495,23 +456,18 @@ function fetchLeaderboard() {
     });
 }
 
-// CƠ CHẾ THƯỞNG TOP 3 ĐIỂM SỐ MỖI TIẾNG (+20$ và +20 Điểm)
 function checkHourlyTop3() {
     const HOUR = 3600000;
     db.ref('storage_data/lastTop3Reward').once('value', snap => {
-        let lastTime = snap.val() || 0;
-        let now = Date.now();
+        let lastTime = snap.val() || 0; let now = Date.now();
         if (now - lastTime >= HOUR) {
-            db.ref('storage_data/lastTop3Reward').set(now); // Đặt lại giờ
-            
+            db.ref('storage_data/lastTop3Reward').set(now); 
             db.ref('users').orderByChild('score').limitToLast(3).once('value', topSnap => {
                 topSnap.forEach(child => {
-                    let topUid = child.key;
-                    let p = child.val();
-                    db.ref(`users/${topUid}/score`).set(p.score + 20); // Tặng 20 điểm
-                    db.ref(`notifications/${topUid}`).push({         // Gửi 20$ hộp thư
-                        sender: "HỆ THỐNG", amount: 20, isRead: false, timestamp: now,
-                        message: "Thưởng duy trì TOP 3 Điểm cao!"
+                    let topUid = child.key; let p = child.val();
+                    db.ref(`users/${topUid}/score`).set(p.score + 20); 
+                    db.ref(`notifications/${topUid}`).push({         
+                        sender: "HỆ THỐNG", amount: 20, isRead: false, timestamp: now, message: "Thưởng TOP 3!"
                     });
                 });
             });
