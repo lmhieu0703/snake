@@ -3,53 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Rắn Săn Mồi Cyberpunk</title>
+    <title>Game Rắn Săn Mồi Cyberpunk - Ultimate Edition</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="game-container">
+        
+        <!-- THANH THÔNG TIN NGƯỜI CHƠI TỔNG (Luôn hiện trừ lúc login) -->
+        <div id="player-profile" class="player-profile hidden">
+            <div class="profile-info">
+                👤 <span id="display-name">Đang tải...</span>
+            </div>
+            <div class="profile-money">
+                💰 <span id="display-money">0</span>$
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH ĐĂNG NHẬP / TẠO TÀI KHOẢN -->
+        <div id="login-screen" class="screen active">
+            <h1 class="game-title">CYBER SNAKE</h1>
+            <p class="subtitle">ĐĂNG KÝ ID ĐỂ MỞ VÍ TIỀN</p>
+            <input type="text" id="reg-name" class="input-field" placeholder="Nhập tên của bạn...">
+            <button id="btn-login" class="btn primary">TẠO TÀI KHOẢN & VÀO GAME</button>
+        </div>
+
         <!-- MÀN HÌNH MENU CHÍNH -->
-        <div id="menu-screen" class="screen active">
-            <h1 class="game-title">RẮN SĂN MỒI</h1>
-            <p class="subtitle">CYBERPUNK EDITION</p>
+        <div id="menu-screen" class="screen hidden">
+            <h1 class="game-title" style="font-size: 32px; margin-top: 10px;">MENU CHÍNH</h1>
 
             <div class="setting-group">
-                <label>ĐỘ KHÓ:</label>
+                <label>🔥 CẤP ĐỘ KHÓ (TỐC ĐỘ & ĐIỂM):</label>
                 <select id="difficulty">
-                    <option value="120">Dễ (Chậm)</option>
-                    <option value="80" selected>Trung Bình</option>
-                    <option value="40">Khó (Nhanh)</option>
+                    <option value="150" data-pts="1">Dễ (Chậm) - Ăn 1 điểm</option>
+                    <option value="100" data-pts="5" selected>Trung Bình - Ăn 5 điểm</option>
+                    <option value="60" data-pts="10">Khó (Nhanh) - Ăn 10 điểm</option>
+                    <option value="35" data-pts="15">Siêu Khó (Ánh sáng) - Ăn 15 điểm</option>
                 </select>
             </div>
 
-            <!-- PHẦN CHỌN MÀU TỰ DO VÀ ẢNH MỚI -->
             <div class="setting-group">
-                <label>CHỌN MÀU RẮN TỰ DO:</label>
-                <div class="color-picker-container">
-                    <!-- Bảng chọn màu tự do (như ảnh sếp gửi) -->
-                    <input type="color" id="custom-color-picker" value="#00f5d4" title="Bấm vào để tự pha màu!">
-                    <span class="color-hint">Bấm vào ô màu để pha màu tùy thích</span>
-                </div>
-
-                <label style="margin-top: 15px;">HOẶC DÙNG ẢNH CỦA BẠN:</label>
+                <label>🎨 CỬA HÀNG SKIN RẮN:</label>
                 <div class="skin-options">
                     <label class="skin-label">
                         <input type="radio" name="skin" value="color" id="radio-color" checked>
-                        <span>Dùng Màu Sắc</span>
+                        <span>Màu tự do</span>
                     </label>
-                    <label class="skin-label">
+                    <label class="skin-label" title="Tốn 50$ mỗi lần chọn ảnh mới">
                         <input type="radio" name="skin" value="custom" id="custom-skin-radio">
-                        <span class="skin-preview custom">🖼️</span> Tự Tải Ảnh
+                        <span>Tải Ảnh (-50$)</span>
+                    </label>
+                    <label class="skin-label" id="rainbow-label">
+                        <input type="radio" name="skin" value="rainbow" id="radio-rainbow" disabled>
+                        <span id="rainbow-text">🌈 Khóa</span>
                     </label>
                 </div>
-                <input type="file" id="skin-upload" accept="image/*" style="display: none;">
-                <button type="button" class="btn-upload" onclick="document.getElementById('skin-upload').click()">Tải Ảnh Của Bạn</button>
+
+                <!-- Chỗ chọn màu tự do -->
+                <div id="color-picker-box" class="color-picker-container" style="margin-top: 10px;">
+                    <input type="color" id="custom-color-picker" value="#00f5d4">
+                    <span class="color-hint">Bấm để pha màu Rắn</span>
+                </div>
+
+                <!-- Chỗ tải ảnh -->
+                <div id="image-upload-box" style="display: none; margin-top: 10px;">
+                    <input type="file" id="skin-upload" accept="image/*" style="display: none;">
+                    <button type="button" class="btn-upload" onclick="document.getElementById('skin-upload').click()">CHỌN ẢNH (-50$)</button>
+                    <span class="color-hint" style="display:block; margin-top:5px; color:#ff2a6d;">Lưu ý: Chỉ trừ tiền khi bạn chọn ảnh thành công!</span>
+                </div>
+
+                <!-- Nút mua Rainbow -->
+                <button id="btn-buy-rainbow" class="btn secondary" style="font-size: 13px; padding: 10px; margin-top: 10px;">🔓 MỞ KHÓA RAINBOW (100$) - CÓ 1 LẦN HỒI SINH MIỄN PHÍ</button>
             </div>
 
-            <div class="button-group">
-                <button id="btn-start" class="btn primary">CHƠI NGAY</button>
-                <button id="btn-leaderboard" class="btn secondary">BẢNG XẾP HẠNG</button>
+            <!-- Các nút tính năng Kinh tế & Game -->
+            <div class="menu-grid-buttons">
+                <button id="btn-start" class="btn primary grid-btn full-width">▶ CHƠI NGAY</button>
+                <button id="btn-leaderboard" class="btn secondary grid-btn">🏆 BXH</button>
+                <button id="btn-inbox" class="btn secondary grid-btn">
+                    💌 HỘP QUÀ <span id="inbox-badge" class="badge hidden">0</span>
+                </button>
+                <button id="btn-transfer" class="btn secondary grid-btn">💸 CHUYỂN $</button>
+                <button id="btn-giftcode" class="btn secondary grid-btn">🎟️ NHẬP CODE</button>
             </div>
         </div>
 
@@ -63,34 +98,90 @@
             <canvas id="game-canvas" width="400" height="400"></canvas>
 
             <div class="game-footer">
-                <button id="btn-back-menu" class="btn danger">THOÁT RA MENU</button>
+                <button id="btn-back-menu" class="btn danger">ĐẦU HÀNG (THOÁT)</button>
             </div>
         </div>
 
-        <!-- MÀN HÌNH BẢNG XẾP HẠNG ONLINE -->
+        <!-- BẢNG THÔNG BÁO HỒI SINH (MODAL) -->
+        <div id="revive-modal" class="overlay-screen hidden">
+            <div class="modal-content">
+                <h2 style="color: #ff2a6d;">💥 RẮN ĐÃ ĐỤNG TƯỜNG! 💥</h2>
+                <p>Điểm hiện tại của bạn: <span id="dead-score" style="color: #00f5d4; font-size: 24px; font-weight: bold;">0</span></p>
+                <p style="margin-top: 15px; color: #a0c0d0;">Phí hồi sinh lần này: <br>
+                    <span id="revive-price" style="font-size: 30px; color: #ffb800; font-weight: bold;">1</span> 
+                    <span style="color: #ffb800; font-weight: bold;">$</span>
+                </p>
+                <p id="rainbow-free-msg" style="color: #00f5d4; font-size: 14px; margin-top: 5px; display: none;">(🌈 Bạn đang dùng Rainbow: Miễn phí hồi sinh lần 1)</p>
+                
+                <div class="button-group" style="margin-top: 20px;">
+                    <button id="btn-do-revive" class="btn primary">💉 HỒI SINH NGAY</button>
+                    <button id="btn-die" class="btn danger">☠️ CHẾT LUÔN (LƯU ĐIỂM)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- MÀN HÌNH BẢNG XẾP HẠNG ĐÔI -->
         <div id="leaderboard-screen" class="screen hidden">
-            <h2>TOP 5 CAO THỦ ONLINE</h2>
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 15px;">
+                <h2 style="margin:0;">TOP CAO THỦ</h2>
+                <span style="color: #00f5d4; font-size: 12px; font-style: italic;">Làm mới: <span id="lb-timer">5</span>s</span>
+            </div>
+            
+            <div class="tab-container">
+                <button id="tab-score" class="tab-btn active">🏆 ĐIỂM SỐ</button>
+                <button id="tab-money" class="tab-btn">💰 PHÚ QUÝ ($)</button>
+            </div>
+
             <table class="leaderboard-table">
                 <thead>
                     <tr>
                         <th>HẠNG</th>
                         <th>TÊN</th>
-                        <th>ĐIỂM</th>
+                        <th id="lb-value-header">ĐIỂM</th>
                     </tr>
                 </thead>
                 <tbody id="leaderboard-body">
                     <tr><td colspan="3" style="color:#00f5d4;">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
-            <button id="btn-close-leaderboard" class="btn primary">QUAY LẠI</button>
+            <p style="color: #ffb800; font-size: 12px; margin-bottom: 15px;">*Top 3 Điểm Số mỗi 1 tiếng được thưởng 20$ và 20 Điểm!</p>
+            <button class="btn primary btn-close-any">QUAY LẠI MENU</button>
         </div>
+
+        <!-- MÀN HÌNH HỘP THƯ -->
+        <div id="inbox-screen" class="screen hidden">
+            <h2>💌 HỘP QUÀ CỦA BẠN</h2>
+            <div id="inbox-list" class="scroll-list">
+                <!-- Danh sách thư sẽ đổ vào đây -->
+            </div>
+            <button class="btn danger btn-close-any" style="margin-top: 20px;">QUAY LẠI</button>
+        </div>
+
+        <!-- MÀN HÌNH CHUYỂN TIỀN -->
+        <div id="transfer-screen" class="screen hidden">
+            <h2>💸 CHUYỂN TIỀN ($)</h2>
+            <p style="color: #a0c0d0; font-size: 14px; margin-bottom: 20px;">Chuyển tiền cho người chơi khác qua Tên của họ.</p>
+            <input type="text" id="transfer-receiver" class="input-field" placeholder="Nhập chính xác tên người nhận">
+            <input type="number" id="transfer-amount" class="input-field" placeholder="Nhập số $ muốn chuyển">
+            <button id="btn-submit-transfer" class="btn primary">XÁC NHẬN CHUYỂN</button>
+            <button class="btn danger btn-close-any">HỦY BỎ</button>
+        </div>
+
+        <!-- MÀN HÌNH NHẬP CODE -->
+        <div id="code-screen" class="screen hidden">
+            <h2>🎟️ NHẬP GIFTCODE</h2>
+            <input type="text" id="giftcode-input" class="input-field" placeholder="Nhập mã code của Admin tại đây">
+            <button id="btn-submit-code" class="btn primary">ĐỔI QUÀ NGAY</button>
+            <button class="btn danger btn-close-any">QUAY LẠI</button>
+        </div>
+
     </div>
 
-    <!-- THƯ VIỆN FIREBASE SDK -->
+    <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-
-    <!-- FILE LOGIC GAME CHÍNH -->
+    
+    <!-- JS CHÍNH -->
     <script src="script.js"></script>
 </body>
 </html>
