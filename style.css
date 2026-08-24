@@ -1,5 +1,5 @@
 /* =========================================
-   CÀI ĐẶT CHUNG (RESET BẢN LỀ, PHÔNG CHỮ)
+   1. CÀI ĐẶT CHUNG (RESET BẢN LỀ, PHÔNG CHỮ)
 ========================================= */
 * {
     box-sizing: border-box;
@@ -8,7 +8,7 @@
 }
 
 body {
-    background-color: #050d14; 
+    background-color: #050d14; /* Nền xanh đen tối Cyberpunk */
     color: #ffffff;
     font-family: 'Orbitron', sans-serif; 
     display: flex;
@@ -16,40 +16,31 @@ body {
     align-items: center;
     height: 100vh;
     overflow: hidden;
-    position: relative; /* Để neo các bảng 2 bên */
+    position: relative; /* Dùng để neo các bảng bên */
 }
 
 /* =========================================
-   HIỆU ỨNG CHỮ RAINBOW (7 SẮC CẦU VỒNG)
+   2. HIỆU ỨNG CHỮ RAINBOW (ĐÃ FIX LỖI TÀNG HÌNH)
 ========================================= */
-#btn-show-event,
-.left-panel .info-box h3,
-.right-panel .info-box h3,
-#event-modal h2 {
-    background-image: linear-gradient(to right, #ff2a6d, #ffb800, #00f5d4, #2a94ff, #d52aff, #ff2a6d);
+.rainbow-text {
+    background: linear-gradient(to right, #ff2a6d, #ffb800, #00f5d4, #2a94ff, #d52aff, #ff2a6d);
+    background-size: 200% auto;
+    color: transparent !important;
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent !important;
+    -webkit-text-fill-color: transparent; /* Fix lỗi mất chữ trên một số trình duyệt */
     animation: rainbow-text-anim 3s linear infinite;
-    background-size: 200% auto;
     font-weight: 900;
-    text-shadow: none; /* Tắt bóng mờ mặc định để gradient nổi lên */
+    text-shadow: none !important; 
+    display: inline-block; /* Bắt buộc để cắt viền chuẩn */
 }
 
 @keyframes rainbow-text-anim {
-    to {
-        background-position: 200% center;
-    }
-}
-
-/* Nút sự kiện bọc viền và nền tối để chữ Rainbow nổi bật */
-#btn-show-event {
-    background: #02080d !important;
-    border: 2px solid #ff2a6d;
+    to { background-position: 200% center; }
 }
 
 /* =========================================
-   BẢNG THÔNG TIN 2 BÊN (SỰ KIỆN & SERVER)
+   3. BẢNG THÔNG TIN 2 BÊN (TRÁI: CÁCH CHƠI | PHẢI: SERVER)
 ========================================= */
 .side-panel {
     position: absolute;
@@ -58,61 +49,73 @@ body {
     width: 280px;
     z-index: 10;
 }
-.left-panel { left: 30px; }
-.right-panel { right: 30px; }
+.left-panel { left: 40px; }
+.right-panel { right: 40px; }
 
 .info-box {
     background: rgba(10, 20, 30, 0.85);
     border: 1px solid #00f5d4;
     padding: 20px;
     border-radius: 12px;
-    box-shadow: 0 0 25px rgba(0, 245, 212, 0.2);
-    backdrop-filter: blur(5px); /* Làm mờ nền đằng sau */
+    box-shadow: 0 0 25px rgba(0, 245, 212, 0.15);
+    backdrop-filter: blur(8px);
 }
 
-/* Nút X đóng sự kiện */
-.btn-close-x {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: transparent;
-    color: #ff2a6d;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    font-weight: bold;
-    transition: 0.3s;
+/* Danh sách Server */
+.server-item {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(0, 245, 212, 0.1);
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    transition: 0.2s;
 }
-.btn-close-x:hover {
-    color: #ffb800;
-    transform: scale(1.2);
-    text-shadow: 0 0 10px #ffb800;
-}
+.server-item:last-child { border-bottom: none; }
+.server-item:hover { background: rgba(0, 245, 212, 0.05); }
 
-/* Nhịp đập nút Sự kiện */
+.status-on { color: #00f5d4; font-weight: bold; text-shadow: 0 0 5px #00f5d4; }
+.status-off { color: #555; font-style: italic; }
+
+/* =========================================
+   4. NÚT SỰ KIỆN & NHỊP ĐẬP (PULSE)
+========================================= */
 .pulse-btn {
     animation: pulse-border 1.5s infinite;
+    cursor: pointer;
+    transition: 0.3s;
 }
+.pulse-btn:hover {
+    transform: scale(1.05);
+}
+
 @keyframes pulse-border {
     0% { box-shadow: 0 0 10px #ff2a6d; }
     50% { box-shadow: 0 0 25px #ff2a6d, 0 0 15px #ffb800; }
     100% { box-shadow: 0 0 10px #ff2a6d; }
 }
 
-/* Danh sách Server */
-.server-item {
-    padding: 10px;
-    border-bottom: 1px solid #112233;
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
+/* Nút X đóng bảng thông báo */
+.btn-close-x {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: transparent;
+    color: #ff2a6d;
+    border: none;
+    font-size: 26px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.3s;
+    outline: none;
 }
-.server-item:last-child { border-bottom: none; }
-.status-on { color: #00f5d4; font-weight: bold; text-shadow: 0 0 5px #00f5d4; }
-.status-off { color: #555; font-style: italic; }
+.btn-close-x:hover {
+    color: #ffb800;
+    transform: scale(1.2) rotate(90deg);
+    text-shadow: 0 0 15px #ffb800;
+}
 
 /* =========================================
-   KHUNG CHÍNH CỦA TRÒ CHƠI
+   5. KHUNG CHÍNH CỦA TRÒ CHƠI (GIỮA MÀN HÌNH)
 ========================================= */
 .game-container {
     background: rgba(10, 20, 30, 0.95);
@@ -123,7 +126,7 @@ body {
     width: 480px;
     text-align: center;
     position: relative;
-    z-index: 20;
+    z-index: 20; /* Nổi cao hơn 2 bảng phụ */
 }
 
 /* Ẩn/Hiện các màn hình */
@@ -131,12 +134,13 @@ body {
     display: none;
     flex-direction: column;
     align-items: center;
+    width: 100%;
 }
 .screen.active, .overlay-screen.active { display: flex; }
 .hidden { display: none !important; }
 
 /* =========================================
-   THÔNG TIN NGƯỜI CHƠI & VÍ TIỀN
+   6. THÔNG TIN NGƯỜI CHƠI & VÍ TIỀN
 ========================================= */
 .player-profile {
     display: flex;
@@ -144,82 +148,70 @@ body {
     align-items: center;
     background: rgba(0, 245, 212, 0.1);
     border: 1px solid #00f5d4;
-    padding: 10px 15px;
+    padding: 12px 15px;
     border-radius: 8px;
     margin-bottom: 20px;
+    width: 100%;
 }
-
-.profile-info { color: #fff; font-weight: bold; font-size: 14px; }
+.profile-info { color: #fff; font-weight: bold; font-size: 15px; text-transform: uppercase; }
 .profile-money { color: #ffb800; font-size: 20px; font-weight: bold; text-shadow: 0 0 8px #ffb800; }
 
 /* =========================================
-   MÀN HÌNH MENU & FORM NHẬP LIỆU
+   7. FORM NHẬP LIỆU & TIÊU ĐỀ
 ========================================= */
 .game-title {
-    color: #00f5d4;
-    font-size: 40px;
-    text-shadow: 0 0 15px #00f5d4;
-    margin-bottom: 5px;
-    letter-spacing: 2px;
+    color: #00f5d4; font-size: 40px; text-shadow: 0 0 15px #00f5d4; margin-bottom: 5px; letter-spacing: 2px;
 }
-
 .subtitle {
-    color: #ff2a6d;
-    font-size: 16px;
-    letter-spacing: 2px;
-    margin-bottom: 25px;
-    text-shadow: 0 0 8px #ff2a6d;
+    color: #ff2a6d; font-size: 16px; letter-spacing: 2px; margin-bottom: 25px; text-shadow: 0 0 8px #ff2a6d;
 }
-
 .input-field {
     width: 100%; padding: 15px; margin-bottom: 15px;
     background: #021a24; color: #00f5d4; border: 1px solid #00f5d4;
     border-radius: 5px; font-family: 'Orbitron', sans-serif;
-    font-size: 16px; outline: none; text-align: center;
+    font-size: 16px; outline: none; text-align: center; transition: 0.3s;
 }
-.input-field:focus { box-shadow: 0 0 10px rgba(0, 245, 212, 0.5); }
+.input-field:focus { box-shadow: 0 0 15px rgba(0, 245, 212, 0.6); }
 
 .setting-group { margin-bottom: 15px; width: 100%; text-align: left; }
 .setting-group label { display: block; margin-bottom: 8px; color: #a0c0d0; font-size: 13px; font-weight: bold; letter-spacing: 1px; }
 
 select {
     width: 100%; padding: 12px; background: #021a24; color: #00f5d4;
-    border: 1px solid #00f5d4; border-radius: 5px; font-family: 'Orbitron', sans-serif;
-    font-size: 14px; outline: none; cursor: pointer;
+    border: 1px solid #00f5d4; border-radius: 5px; font-family: 'Orbitron', sans-serif; font-size: 14px; outline: none; cursor: pointer;
 }
 
 /* =========================================
-   CỬA HÀNG SKIN VÀ MÀU SẮC
+   8. CỬA HÀNG SKIN VÀ MÀU SẮC
 ========================================= */
 .skin-options { display: flex; justify-content: space-between; margin-bottom: 5px; }
 .skin-label {
     display: flex; align-items: center; cursor: pointer; font-size: 12px; color: #ccc;
-    background: #021a24; padding: 8px; border-radius: 5px; border: 1px solid #333; flex: 1; margin: 0 5px;
+    background: #021a24; padding: 8px; border-radius: 5px; border: 1px solid #333; flex: 1; margin: 0 4px; justify-content: center;
 }
 .skin-label span { margin-left: 5px; }
-input[type="radio"] { accent-color: #00f5d4; }
+input[type="radio"] { accent-color: #00f5d4; cursor: pointer; }
 input[type="radio"]:disabled + span { color: #555; }
 
-.color-picker-container { display: flex; align-items: center; gap: 15px; background: #021a24; padding: 10px; border-radius: 5px; border: 1px solid #333; }
-input[type="color"] { appearance: none; border: none; width: 40px; height: 40px; border-radius: 5px; cursor: pointer; background: transparent; }
+.color-picker-container { display: flex; align-items: center; justify-content: center; gap: 15px; background: #021a24; padding: 10px; border-radius: 5px; border: 1px solid #333; }
+input[type="color"] { appearance: none; border: none; width: 45px; height: 45px; border-radius: 5px; cursor: pointer; background: transparent; }
 input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
 input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radius: 5px; }
 .color-hint { color: #888; font-size: 12px; font-style: italic; }
 
 /* =========================================
-   HỆ THỐNG NÚT BẤM (BUTTONS & GRID)
+   9. HỆ THỐNG NÚT BẤM (BUTTONS & GRID)
 ========================================= */
 .btn {
     width: 100%; padding: 12px; margin-bottom: 10px; border: none; border-radius: 5px;
     font-family: 'Orbitron', sans-serif; font-size: 16px; font-weight: bold; cursor: pointer;
     transition: all 0.3s ease; text-transform: uppercase; letter-spacing: 1px;
 }
-
 .btn.primary { background: #00f5d4; color: #050d14; box-shadow: 0 0 15px rgba(0, 245, 212, 0.4); }
-.btn.primary:hover { box-shadow: 0 0 25px #00f5d4; transform: scale(1.02); }
+.btn.primary:hover { box-shadow: 0 0 25px #00f5d4; transform: scale(1.03); }
 
 .btn.secondary { background: transparent; color: #ffb800; border: 2px solid #ffb800; }
-.btn.secondary:hover { background: rgba(255, 184, 0, 0.1); box-shadow: 0 0 15px rgba(255, 184, 0, 0.4); transform: scale(1.02); }
+.btn.secondary:hover { background: rgba(255, 184, 0, 0.1); box-shadow: 0 0 15px rgba(255, 184, 0, 0.4); transform: scale(1.03); }
 
 .btn.danger { background: transparent; color: #ff2a6d; border: 2px solid #ff2a6d; margin-top: 10px; }
 .btn.danger:hover { background: rgba(255, 42, 109, 0.1); box-shadow: 0 0 15px rgba(255, 42, 109, 0.5); }
@@ -230,33 +222,35 @@ input[type="color"]::-webkit-color-swatch { border: 2px solid #fff; border-radiu
 .menu-grid-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; margin-top: 10px; }
 .full-width { grid-column: span 2; }
 .grid-btn { margin-bottom: 0 !important; font-size: 14px; padding: 10px;}
-
 .badge { background: #ff2a6d; color: white; border-radius: 50%; padding: 2px 6px; font-size: 11px; margin-left: 5px; box-shadow: 0 0 5px #ff2a6d; }
 
 /* =========================================
-   MÀN HÌNH CHƠI GAME & CANVAS
+   10. MÀN HÌNH CHƠI GAME & CANVAS
 ========================================= */
-.game-header { display: flex; justify-content: space-between; width: 400px; margin-bottom: 15px; }
+.game-header { display: flex; justify-content: space-between; width: 100%; margin-bottom: 15px; padding: 0 10px; }
 .score-box { color: #a0c0d0; font-size: 14px; letter-spacing: 1px; }
 .score-box span { color: #00f5d4; font-weight: bold; font-size: 22px; text-shadow: 0 0 8px #00f5d4; margin-left: 5px; }
-
 canvas { border: 2px solid rgba(0, 245, 212, 0.3); border-radius: 5px; background: #02080d; box-shadow: 0 0 20px rgba(0, 0, 0, 0.8); }
+.game-footer { width: 100%; margin-top: 10px; }
 
 /* =========================================
-   BẢNG THÔNG BÁO & LỚP PHỦ
+   11. MODAL (BẢNG THÔNG BÁO NỔI GIỮA MÀN)
 ========================================= */
 .overlay-screen {
     position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(5, 13, 20, 0.9); z-index: 100;
+    background: rgba(5, 13, 20, 0.85); 
+    backdrop-filter: blur(5px);
+    z-index: 999; /* Luôn nổi trên cùng, đè lên mọi thứ */
     display: flex; justify-content: center; align-items: center;
 }
 .modal-content {
-    background: #02080d; border: 2px solid #ff2a6d; border-radius: 10px;
-    padding: 30px; width: 85%; max-width: 450px; box-shadow: 0 0 30px rgba(255, 42, 109, 0.5); text-align: center;
+    background: #02080d; border: 2px solid #ff2a6d; border-radius: 12px;
+    padding: 35px 30px; width: 85%; max-width: 450px; box-shadow: 0 0 40px rgba(255, 42, 109, 0.4); text-align: center;
+    position: relative;
 }
 
 /* =========================================
-   BẢNG XẾP HẠNG & TABS
+   12. BẢNG XẾP HẠNG & TABS
 ========================================= */
 .tab-container { display: flex; gap: 10px; margin-bottom: 15px; width: 100%; }
 .tab-btn {
@@ -278,14 +272,13 @@ canvas { border: 2px solid rgba(0, 245, 212, 0.3); border-radius: 5px; backgroun
 #hourly-countdown { animation: pulse-glow 1.5s infinite; }
 
 /* =========================================
-   DANH SÁCH CUỘN (HỘP THƯ & SERVER)
+   13. DANH SÁCH CUỘN (HỘP THƯ & SERVER)
 ========================================= */
-.scroll-list {
-    max-height: 280px; overflow-y: auto; text-align: left; width: 100%; margin-bottom: 15px; padding-right: 5px;
-}
-.scroll-list::-webkit-scrollbar { width: 5px; }
+.scroll-list { max-height: 280px; overflow-y: auto; text-align: left; width: 100%; margin-bottom: 15px; padding-right: 5px; }
+.scroll-list::-webkit-scrollbar { width: 6px; }
+.scroll-list::-webkit-scrollbar-track { background: rgba(0, 245, 212, 0.05); border-radius: 5px; }
 .scroll-list::-webkit-scrollbar-thumb { background: #00f5d4; border-radius: 5px; }
 
-.inbox-item { background: #021a24; border: 1px solid #334455; padding: 15px; border-radius: 5px; margin-bottom: 10px; }
+.inbox-item { background: #021a24; border: 1px solid #334455; padding: 15px; border-radius: 8px; margin-bottom: 12px; }
 .inbox-item .sender { color: #a0c0d0; font-size: 14px; }
 .inbox-item .amount { color: #ffb800; float: right; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #ffb800; }

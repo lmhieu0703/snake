@@ -14,11 +14,13 @@
     ========================================= -->
     <div class="side-panel left-panel hidden-on-login">
         <!-- Nút bật sự kiện -->
-        <button id="btn-show-event" class="btn primary pulse-btn">🎉 SỰ KIỆN HOT</button>
+        <button id="btn-show-event" class="btn pulse-btn" style="background: #02080d; border: 2px solid #ff2a6d; padding: 15px;">
+            <span class="rainbow-text" style="font-size: 16px;">🎉 SỰ KIỆN MỚI</span>
+        </button>
         
         <!-- Hướng dẫn cách chơi -->
         <div class="info-box" style="margin-top: 20px;">
-            <h3 style="color: #ffb800; margin-bottom: 10px;">📖 CÁCH CHƠI</h3>
+            <h3 class="rainbow-text" style="margin-bottom: 10px; font-size: 18px; display: block;">📖 CÁCH CHƠI</h3>
             <p style="font-size: 14px; color: #a0c0d0; line-height: 1.5;">
                 Dùng phím <strong style="color: #00f5d4;">A, S, D, W</strong> hoặc <strong style="color: #00f5d4;">⬅️ ⬆️ ⬇️ ➡️</strong> để bẻ lái và bắt đầu di chuyển.
                 <br><br>
@@ -32,10 +34,10 @@
     ========================================= -->
     <div class="side-panel right-panel hidden-on-login">
         <div class="info-box">
-            <h3 style="color: #00f5d4; margin-bottom: 5px; text-align: center;">🌐 SERVER (SELEVE)</h3>
+            <h3 class="rainbow-text" style="margin-bottom: 5px; text-align: center; display: block; font-size: 18px;">🌐 SERVER (SELEVE)</h3>
             <p style="font-size: 11px; color: #888; text-align: center; margin-bottom: 15px;">Xem tên người chơi để chuyển $</p>
             
-            <div id="server-list" class="server-list scroll-list">
+            <div id="server-list" class="server-list scroll-list" style="max-height: 300px;">
                 <!-- Danh sách Online/Offline sẽ được JS đổ vào đây -->
                 <div style="color:#00f5d4; text-align:center;">Đang quét server...</div>
             </div>
@@ -55,7 +57,7 @@
             <!-- Nút X tắt thông báo -->
             <button id="btn-close-event" class="btn-close-x">✖</button>
             
-            <h2 style="color: #00f5d4; text-shadow: 0 0 10px #00f5d4; margin-bottom: 20px; text-align: center;">🎊 THÔNG TIN SỰ KIỆN 🎊</h2>
+            <h2 class="rainbow-text" style="margin-bottom: 20px; text-align: center; display: block; font-size: 24px;">🎊 THÔNG TIN SỰ KIỆN 🎊</h2>
             
             <div style="color: #fff; line-height: 1.8; font-size: 15px;">
                 <p>🌈 <strong>THÊM SKIN MỚI RAINBOW:</strong> Cần <strong>100$</strong> để mở khóa. Khi trang bị sẽ nhận ngay đặc quyền 1 lượt hồi sinh MIỄN PHÍ mỗi ván game!</p>
@@ -115,7 +117,7 @@
                     </label>
                     <label class="skin-label" id="rainbow-label">
                         <input type="radio" name="skin" value="rainbow" id="radio-rainbow" disabled>
-                        <span id="rainbow-text">🌈 Khóa</span>
+                        <span id="rainbow-text-shop">🌈 Khóa</span>
                     </label>
                 </div>
 
@@ -213,9 +215,7 @@
         <!-- MÀN HÌNH HỘP THƯ -->
         <div id="inbox-screen" class="screen hidden">
             <h2>💌 HỘP QUÀ CỦA BẠN</h2>
-            <div id="inbox-list" class="scroll-list">
-                <!-- Danh sách thư -->
-            </div>
+            <div id="inbox-list" class="scroll-list"></div>
             <button class="btn danger btn-close-any" style="margin-top: 20px;">QUAY LẠI</button>
         </div>
 

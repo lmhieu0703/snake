@@ -67,8 +67,13 @@ window.onload = () => {
     // Ẩn 2 bảng 2 bên lúc chưa đăng nhập
     document.querySelectorAll('.hidden-on-login').forEach(el => el.style.display = 'none');
     
-    if (!uid) { els.login.classList.add('active'); } 
-    else { els.login.classList.remove('active'); els.login.classList.add('hidden'); loadUserData(); }
+    if (!uid) { 
+        els.login.classList.add('active'); 
+    } else { 
+        els.login.classList.remove('active'); 
+        els.login.classList.add('hidden'); 
+        loadUserData(); 
+    }
 };
 
 document.getElementById('btn-login').onclick = () => {
@@ -82,15 +87,18 @@ document.getElementById('btn-login').onclick = () => {
         name: name, score: 0, money: 0, hasRainbow: false, isOnline: true
     }).then(() => {
         alert("🎉 Đăng ký thành công! Chào mừng gia nhập Cyberpunk!");
-        els.login.classList.remove('active'); els.login.classList.add('hidden');
+        els.login.classList.remove('active'); 
+        els.login.classList.add('hidden');
         loadUserData();
     });
 };
 
 function loadUserData() {
-    els.profile.classList.remove('hidden'); els.menu.classList.remove('hidden'); els.menu.classList.add('active');
+    els.profile.classList.remove('hidden'); 
+    els.menu.classList.remove('hidden'); 
+    els.menu.classList.add('active');
     
-    // Hiện 2 bảng 2 bên
+    // Hiện 2 bảng Sự kiện & Server
     document.querySelectorAll('.hidden-on-login').forEach(el => el.style.display = 'block');
     
     // Tự động báo Online / Offline với máy chủ Firebase
@@ -117,7 +125,7 @@ function loadUserData() {
 
         let rBtn = document.getElementById('btn-buy-rainbow');
         let rRadio = document.getElementById('radio-rainbow');
-        let rText = document.getElementById('rainbow-text');
+        let rText = document.getElementById('rainbow-text-shop');
         
         if (hasRainbow) {
             rBtn.innerText = "✅ ĐÃ SỞ HỮU RAINBOW (SKIN & HỒI SINH TỰ ĐỘNG)";
@@ -168,17 +176,26 @@ function loadServerList() {
     });
 }
 
-// BẬT / TẮT SỰ KIỆN
-document.getElementById('btn-show-event').onclick = () => { els.eventModal.classList.remove('hidden'); els.eventModal.classList.add('active'); };
-document.getElementById('btn-close-event').onclick = () => { els.eventModal.classList.remove('active'); els.eventModal.classList.add('hidden'); };
+// ==========================================
+// 4. SỰ KIỆN HOT (EVENT MODAL)
+// ==========================================
+document.getElementById('btn-show-event').onclick = () => { 
+    els.eventModal.classList.remove('hidden'); 
+    els.eventModal.classList.add('active'); 
+};
+document.getElementById('btn-close-event').onclick = () => { 
+    els.eventModal.classList.remove('active'); 
+    els.eventModal.classList.add('hidden'); 
+};
 
 // ==========================================
-// 4. KINH TẾ: SKIN, CHUYỂN TIỀN, HỘP THƯ, CODE
+// 5. KINH TẾ: SKIN, CHUYỂN TIỀN, HỘP THƯ, CODE
 // ==========================================
 document.getElementById('btn-buy-rainbow').onclick = () => {
     if (hasRainbow) return;
     if (playerMoney < 100) return alert("❌ Bạn không đủ 100$! Cày thêm hoặc xin bạn bè đi sếp.");
-    db.ref(`users/${uid}/money`).set(playerMoney - 100); db.ref(`users/${uid}/hasRainbow`).set(true);
+    db.ref(`users/${uid}/money`).set(playerMoney - 100); 
+    db.ref(`users/${uid}/hasRainbow`).set(true);
     alert("🎉 ĐÃ MỞ KHÓA SKIN RAINBOW! Bạn có 1 lượt hồi sinh MIỄN PHÍ mỗi ván game!");
 };
 
@@ -222,11 +239,12 @@ document.getElementById('btn-submit-transfer').onclick = () => {
     });
 };
 
-// HỘP THƯ
+// HỘP THƯ TỰ ĐỘNG XÓA
 document.getElementById('btn-inbox').onclick = () => {
     switchScreen('inbox-screen');
     db.ref(`notifications/${uid}`).once('value', snap => {
-        const list = document.getElementById('inbox-list'); list.innerHTML = '';
+        const list = document.getElementById('inbox-list'); 
+        list.innerHTML = '';
         if (!snap.exists()) { list.innerHTML = '<p style="color:#888;">Hộp thư trống!</p>'; return; }
         
         let msgs = []; const now = Date.now(); const ONE_DAY = 24 * 60 * 60 * 1000; 
@@ -260,9 +278,13 @@ document.getElementById('btn-inbox').onclick = () => {
 window.claimMail = function(mailId, amount) {
     db.ref(`users/${uid}/money`).set(playerMoney + amount);
     db.ref(`notifications/${uid}/${mailId}`).update({ isRead: true, timestamp: Date.now() });
-    alert(`💰 Đã nhận ${amount}$ vào ví!`); document.getElementById('btn-inbox').click(); 
+    alert(`💰 Đã nhận ${amount}$ vào ví!`); 
+    document.getElementById('btn-inbox').click(); 
 };
-window.deleteMail = function(mailId) { db.ref(`notifications/${uid}/${mailId}`).remove(); document.getElementById('btn-inbox').click(); };
+window.deleteMail = function(mailId) { 
+    db.ref(`notifications/${uid}/${mailId}`).remove(); 
+    document.getElementById('btn-inbox').click(); 
+};
 
 // NHẬP CODE
 document.getElementById('btn-submit-code').onclick = () => {
@@ -281,7 +303,7 @@ document.getElementById('btn-submit-code').onclick = () => {
 };
 
 // ==========================================
-// 5. CƠ CHẾ GAMEPLAY RẮN SĂN MỒI
+// 6. CƠ CHẾ GAMEPLAY RẮN SĂN MỒI
 // ==========================================
 document.getElementById('btn-start').onclick = () => {
     gameSpeed = parseInt(document.getElementById('difficulty').value);
@@ -296,10 +318,14 @@ document.getElementById('btn-start').onclick = () => {
 };
 
 function resetGame() {
-    // Rắn mặc định dài 3 đốt
+    // Đặt thân rắn dài 3 đốt mặc định
     snake = [ {x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160} ];
-    dx = gridSize; dy = 0; nextDirection = { x: gridSize, y: 0 };
-    score = 0; reviveCost = 1; rainbowReviveUsed = false; changingDirection = false; isGameOver = false; isMoving = false;
+    dx = gridSize; dy = 0; 
+    nextDirection = { x: gridSize, y: 0 };
+    score = 0; reviveCost = 1; rainbowReviveUsed = false; changingDirection = false; isGameOver = false; 
+    
+    // ĐỨNG IM CHỜ LỆNH
+    isMoving = false; 
     
     document.getElementById('current-score').innerText = score;
     els.reviveModal.classList.add('hidden');
@@ -320,28 +346,46 @@ function placeFood() {
 
 function gameLoop() {
     if (isGameOver) return;
-    if (!isMoving) { draw(); return; } 
     
-    changingDirection = false; dx = nextDirection.x; dy = nextDirection.y;
+    // Nếu chưa bấm phím/vuốt, rắn chỉ vẽ nguyên tại chỗ (nhấp nháy màu 7 sắc nếu có)
+    if (!isMoving) { 
+        draw(); 
+        return; 
+    } 
+    
+    changingDirection = false; 
+    dx = nextDirection.x; 
+    dy = nextDirection.y;
+    
     const head = {x: snake[0].x + dx, y: snake[0].y + dy};
     
-    if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollision(head)) { triggerDeath(); return; }
+    if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height || checkCollision(head)) { 
+        triggerDeath(); 
+        return; 
+    }
 
     snake.unshift(head);
     
     if (head.x === food.x && head.y === food.y) {
-        score += currentPtsPerFood; document.getElementById('current-score').innerText = score; placeFood();
-    } else { snake.pop(); }
+        score += currentPtsPerFood; 
+        document.getElementById('current-score').innerText = score; 
+        placeFood();
+    } else { 
+        snake.pop(); 
+    }
     draw();
 }
 
 function checkCollision(head) {
-    for (let i = 1; i < snake.length; i++) { if (head.x === snake[i].x && head.y === snake[i].y) return true; }
+    for (let i = 1; i < snake.length; i++) { 
+        if (head.x === snake[i].x && head.y === snake[i].y) return true; 
+    }
     return false;
 }
 
 function draw() {
-    ctx.fillStyle = '#02080d'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#02080d'; 
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = 'rgba(0, 245, 212, 0.05)';
     for(let i = 0; i <= canvas.width; i += gridSize) {
         ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
@@ -349,6 +393,7 @@ function draw() {
     }
     ctx.fillStyle = '#ff2a6d'; ctx.shadowBlur = 15; ctx.shadowColor = '#ff2a6d';
     ctx.fillRect(food.x, food.y, gridSize, gridSize); ctx.shadowBlur = 0;
+    
     rainbowHue = (rainbowHue + 5) % 360; 
 
     snake.forEach((part, index) => {
@@ -372,19 +417,19 @@ function draw() {
 function handleInput(newDx, newDy) {
     if (isGameOver || changingDirection) return;
     
-    // Nếu rắn đang có thân dài hơn 1 đốt, KHÔNG CHO PHÉP đầu quay ngược đâm thẳng vào cái đốt số 2 (cổ rắn)
+    // Thuật toán: Nếu rắn đang có thân (length > 1), chặn việc đầu quay ngược đâm thẳng vào đốt cổ (snake[1])
     if (snake.length > 1 && snake[0].x + newDx === snake[1].x && snake[0].y + newDy === snake[1].y) {
-        return; // Từ chối nhận lệnh, rắn cứ đứng im chờ lệnh khác
+        return; // Hủy lệnh! Rắn cứ đứng im hoặc chạy hướng cũ.
     }
     
     nextDirection = {x: newDx, y: newDy};
     changingDirection = true;
-    isMoving = true; // Bắt đầu phi
+    isMoving = true; // Kích hoạt rắn lao đi
 }
 
 document.addEventListener('keydown', e => {
     const key = e.keyCode;
-    // Bổ sung các phím A(65), W(87), D(68), S(83) và Mũi tên
+    // Hỗ trợ cả 4 Mũi tên và 4 phím A, S, D, W
     if([37, 38, 39, 40, 65, 87, 68, 83].includes(key)) e.preventDefault(); 
     
     if (key === 37 || key === 65) handleInput(-gridSize, 0); // Trái
@@ -393,7 +438,7 @@ document.addEventListener('keydown', e => {
     if (key === 40 || key === 83) handleInput(0, gridSize);  // Xuống
 });
 
-// Vuốt điện thoại cũng chống cắn cổ luôn
+// Chống cắn cổ trên di động (Vuốt màn hình)
 let touchStartX = 0, touchStartY = 0;
 canvas.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, {passive: false});
 canvas.addEventListener('touchmove', e => e.preventDefault(), {passive: false}); 
@@ -410,40 +455,67 @@ canvas.addEventListener('touchend', e => {
 });
 
 // ==========================================
-// 6. XỬ LÝ HỒI SINH & GAME OVER
+// 7. XỬ LÝ HỒI SINH & GAME OVER
 // ==========================================
 function triggerDeath() {
-    isGameOver = true; clearInterval(gameInterval); document.getElementById('dead-score').innerText = score;
+    isGameOver = true; 
+    clearInterval(gameInterval); 
+    document.getElementById('dead-score').innerText = score;
     let freeMsg = document.getElementById('rainbow-free-msg');
     let priceText = document.getElementById('revive-price');
-    if (hasRainbow && !rainbowReviveUsed) { priceText.innerText = "0 (MIỄN PHÍ)"; freeMsg.style.display = "block"; } 
-    else { priceText.innerText = reviveCost; freeMsg.style.display = "none"; }
+    
+    if (hasRainbow && !rainbowReviveUsed) { 
+        priceText.innerText = "0 (MIỄN PHÍ)"; freeMsg.style.display = "block"; 
+    } else { 
+        priceText.innerText = reviveCost; freeMsg.style.display = "none"; 
+    }
     els.reviveModal.classList.remove('hidden');
 }
 
 document.getElementById('btn-do-revive').onclick = () => {
     let cost = (hasRainbow && !rainbowReviveUsed) ? 0 : reviveCost;
     if (playerMoney < cost) return alert("❌ Nghèo quá rồi, không đủ $ hồi sinh! Xin bạn bè đi.");
-    if (cost > 0) { db.ref(`users/${uid}/money`).set(playerMoney - cost); reviveCost *= 2; } 
-    else { rainbowReviveUsed = true; }
     
+    if (cost > 0) { 
+        db.ref(`users/${uid}/money`).set(playerMoney - cost); 
+        reviveCost *= 2; 
+    } else { 
+        rainbowReviveUsed = true; 
+    }
+    
+    // Tái tạo thân rắn giữa bản đồ và ĐỨNG IM CHỜ LỆNH
     snake = [ {x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160} ];
-    dx = gridSize; dy = 0; nextDirection = { x: gridSize, y: 0 }; isMoving = false; isGameOver = false;
+    dx = gridSize; dy = 0; 
+    nextDirection = { x: gridSize, y: 0 }; 
+    isMoving = false; 
+    isGameOver = false;
+    
     els.reviveModal.classList.add('hidden');
-    clearInterval(gameInterval); gameInterval = setInterval(gameLoop, gameSpeed); draw(); 
+    clearInterval(gameInterval); 
+    gameInterval = setInterval(gameLoop, gameSpeed); 
+    draw(); 
 };
 
 document.getElementById('btn-die').onclick = () => {
     els.reviveModal.classList.add('hidden');
     let bonus1000 = Math.floor(score / 1000) * 10;
-    if (bonus1000 > 0) { db.ref(`users/${uid}/money`).set(playerMoney + bonus1000); alert(`🎁 CHƠI HAY LẮM! Đạt mốc nghìn điểm, hệ thống thưởng nóng ${bonus1000}$`); }
-    if (score > playerHighScore) { db.ref(`users/${uid}/score`).set(score); alert(`🏆 PHÁ KỶ LỤC CÁ NHÂN: ${score} ĐIỂM!`); }
+    if (bonus1000 > 0) { 
+        db.ref(`users/${uid}/money`).set(playerMoney + bonus1000); 
+        alert(`🎁 CHƠI HAY LẮM! Đạt mốc nghìn điểm, hệ thống thưởng nóng ${bonus1000}$`); 
+    }
+    if (score > playerHighScore) { 
+        db.ref(`users/${uid}/score`).set(score); 
+        alert(`🏆 PHÁ KỶ LỤC CÁ NHÂN: ${score} ĐIỂM!`); 
+    }
     switchScreen('menu-screen');
 };
-document.getElementById('btn-back-menu').onclick = () => { if(confirm("Đầu hàng sẽ tính là thua. Thoát?")) document.getElementById('btn-die').click(); };
+
+document.getElementById('btn-back-menu').onclick = () => { 
+    if(confirm("Đầu hàng sẽ tính là thua. Thoát?")) document.getElementById('btn-die').click(); 
+};
 
 // ==========================================
-// 7. BẢNG XẾP HẠNG & ĐỒNG HỒ ĐẾM NGƯỢC
+// 8. BẢNG XẾP HẠNG & ĐỒNG HỒ ĐẾM NGƯỢC
 // ==========================================
 let currentLbTab = 'score'; 
 let countdownTimerInterval;
@@ -459,7 +531,8 @@ document.getElementById('tab-money').onclick = () => { currentLbTab = 'money'; f
 
 document.getElementById('btn-refresh-lb').onclick = () => {
     let btn = document.getElementById('btn-refresh-lb');
-    btn.innerText = "⏳ ĐANG TẢI..."; fetchLeaderboard();
+    btn.innerText = "⏳ ĐANG TẢI..."; 
+    fetchLeaderboard();
     setTimeout(() => { btn.innerText = "🔄 LÀM MỚI"; }, 800);
 };
 
@@ -473,7 +546,10 @@ function fetchLeaderboard() {
         let arr = []; 
         snap.forEach(c => {
             let data = c.val();
-            data.score = parseInt(data.score) || 0; data.money = parseInt(data.money) || 0; arr.push(data);
+            // ÉP KIỂU SỐ NGUYÊN (CHỐNG LỖI)
+            data.score = parseInt(data.score) || 0; 
+            data.money = parseInt(data.money) || 0; 
+            arr.push(data);
         });
         
         arr.sort((a, b) => b[currentLbTab] - a[currentLbTab]);
@@ -498,20 +574,26 @@ function fetchLeaderboard() {
 function startCountdownTimer() {
     clearInterval(countdownTimerInterval); 
     db.ref('storage_data/lastTop3Reward').once('value', snap => {
-        let lastTime = snap.val(); let now = Date.now();
-        if (!lastTime) { lastTime = now; db.ref('storage_data/lastTop3Reward').set(lastTime); }
+        let lastTime = snap.val(); 
+        let now = Date.now();
+        if (!lastTime) { 
+            lastTime = now; 
+            db.ref('storage_data/lastTop3Reward').set(lastTime); 
+        }
 
         countdownTimerInterval = setInterval(() => {
             let currentTime = Date.now();
-            let nextRewardTime = lastTime + 3600000; 
+            let nextRewardTime = lastTime + 3600000; // Cộng 1 Tiếng
             let timeLeft = nextRewardTime - currentTime;
 
             if (timeLeft <= 0) {
                 clearInterval(countdownTimerInterval);
                 document.getElementById('hourly-countdown').innerText = "🎉 ĐANG PHÁT QUÀ!";
-                checkHourlyTop3(); setTimeout(startCountdownTimer, 2000); 
+                checkHourlyTop3(); 
+                setTimeout(startCountdownTimer, 2000); 
             } else {
-                let m = Math.floor(timeLeft / 60000); let s = Math.floor((timeLeft % 60000) / 1000);
+                let m = Math.floor(timeLeft / 60000); 
+                let s = Math.floor((timeLeft % 60000) / 1000);
                 document.getElementById('hourly-countdown').innerText = `${m < 10 ? '0'+m : m}:${s < 10 ? '0'+s : s}`;
             }
         }, 1000); 
@@ -521,19 +603,27 @@ function startCountdownTimer() {
 function checkHourlyTop3() {
     const HOUR = 3600000;
     db.ref('storage_data/lastTop3Reward').once('value', snap => {
-        let lastTime = snap.val() || 0; let now = Date.now();
+        let lastTime = snap.val() || 0; 
+        let now = Date.now();
         
         if (now - lastTime >= HOUR) {
             db.ref('storage_data/lastTop3Reward').set(now); 
+            
             db.ref('users').once('value', topSnap => {
                 let arr = [];
-                topSnap.forEach(child => { let data = child.val(); arr.push({ uid: child.key, score: parseInt(data.score) || 0, ...data }); });
+                topSnap.forEach(child => { 
+                    let data = child.val(); 
+                    arr.push({ uid: child.key, score: parseInt(data.score) || 0, ...data }); 
+                });
                 arr.sort((a, b) => b.score - a.score);
                 let top3 = arr.slice(0, 3);
                 
                 top3.forEach((p, index) => {
                     let reward = 0;
-                    if (index === 0) reward = 30; else if (index === 1) reward = 20; else if (index === 2) reward = 10; 
+                    if (index === 0) reward = 30; 
+                    else if (index === 1) reward = 20; 
+                    else if (index === 2) reward = 10; 
+                    
                     if (reward > 0) {
                         db.ref(`users/${p.uid}/score`).set(p.score + reward); 
                         db.ref(`notifications/${p.uid}`).push({         
@@ -547,15 +637,22 @@ function checkHourlyTop3() {
 }
 
 // ==========================================
-// 8. TIỆN ÍCH CHUYỂN MÀN HÌNH
+// 9. TIỆN ÍCH CHUYỂN MÀN HÌNH
 // ==========================================
 document.querySelectorAll('.btn-close-any').forEach(btn => {
-    btn.onclick = () => { switchScreen('menu-screen'); clearInterval(countdownTimerInterval); }; 
+    btn.onclick = () => { 
+        switchScreen('menu-screen'); 
+        clearInterval(countdownTimerInterval); 
+    }; 
 });
 document.getElementById('btn-transfer').onclick = () => switchScreen('transfer-screen');
 document.getElementById('btn-giftcode').onclick = () => switchScreen('code-screen');
 
 function switchScreen(screenId) {
-    document.querySelectorAll('.screen').forEach(s => { s.classList.remove('active'); s.classList.add('hidden'); });
-    document.getElementById(screenId).classList.remove('hidden'); document.getElementById(screenId).classList.add('active');
+    document.querySelectorAll('.screen').forEach(s => { 
+        s.classList.remove('active'); 
+        s.classList.add('hidden'); 
+    });
+    document.getElementById(screenId).classList.remove('hidden'); 
+    document.getElementById(screenId).classList.add('active');
 }
