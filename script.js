@@ -59,6 +59,12 @@ const els = {
     reviveModal: document.getElementById('revive-modal')
 };
 
+// Ẩn dòng chữ "Làm mới 5s" trên file HTML đi vì sếp không cần nữa
+const lbTimerEl = document.getElementById('lb-timer');
+if (lbTimerEl && lbTimerEl.parentNode) {
+    lbTimerEl.parentNode.style.display = 'none'; 
+}
+
 // ==========================================
 // 3. HỆ THỐNG TÀI KHOẢN & VÍ TIỀN
 // ==========================================
@@ -113,7 +119,6 @@ function loadUserData() {
         snap.forEach(child => { if (!child.val().isRead) unread++; });
         const badge = document.getElementById('inbox-badge');
         
-        // Fix cứng ép ẩn/hiện ngay lập tức không bị kẹt CSS
         if (unread > 0) { 
             badge.innerText = unread; 
             badge.style.display = 'inline-block'; 
@@ -121,7 +126,8 @@ function loadUserData() {
             badge.style.display = 'none'; 
         }
     });
-    setInterval(checkHourlyTop3, 60000); 
+    
+    setInterval(checkHourlyTop3, 60000); // Kiểm tra thưởng giờ (Chạy ngầm)
 }
 
 // ==========================================
@@ -185,11 +191,10 @@ document.getElementById('btn-inbox').onclick = () => {
         
         let msgs = []; 
         const now = Date.now();
-        const ONE_DAY = 24 * 60 * 60 * 1000; // 24 tiếng
+        const ONE_DAY = 24 * 60 * 60 * 1000; 
 
         snap.forEach(c => {
             let msg = c.val();
-            // Nếu đã nhận tiền VÀ thời gian quá 24h -> Tự động xóa khỏi máy chủ luôn
             if (msg.isRead && (now - msg.timestamp > ONE_DAY)) {
                 db.ref(`notifications/${uid}/${c.key}`).remove();
             } else {
@@ -219,17 +224,14 @@ document.getElementById('btn-inbox').onclick = () => {
 
 window.claimMail = function(mailId, amount) {
     db.ref(`users/${uid}/money`).set(playerMoney + amount);
-    db.ref(`notifications/${uid}/${mailId}`).update({
-        isRead: true,
-        timestamp: Date.now() // Bắt đầu tính giờ 24h từ lúc bấm NHẬN
-    });
+    db.ref(`notifications/${uid}/${mailId}`).update({ isRead: true, timestamp: Date.now() });
     alert(`💰 Đã nhận ${amount}$ vào ví!`); 
-    document.getElementById('btn-inbox').click(); // Reload lại khung hộp thư
+    document.getElementById('btn-inbox').click(); 
 };
 
 window.deleteMail = function(mailId) {
-    db.ref(`notifications/${uid}/${mailId}`).remove(); // Nút xóa thủ công
-    document.getElementById('btn-inbox').click(); // Reload lại
+    db.ref(`notifications/${uid}/${mailId}`).remove(); 
+    document.getElementById('btn-inbox').click(); 
 };
 
 // ==========================================
@@ -242,7 +244,7 @@ document.getElementById('btn-submit-code').onclick = () => {
     db.ref(`storage_data/codes/${code}`).once('value', snap => {
         if(!snap.exists()) return alert("❌ Code không tồn tại hoặc đã bị hủy!");
         let cData = snap.val();
-        if(cData.usedBy !== false) return alert(`❌ Code này đã bị người chơi [${cData.usedBy}] nhập mất rồi! Chậm tay quá sếp ơi!`);
+        if(cData.usedBy !== false) return alert(`❌ Code này đã bị người chơi [${cData.usedBy}] nhập mất rồi!`);
         
         db.ref(`storage_data/codes/${code}`).update({ usedBy: playerName, usedAt: Date.now() });
         db.ref(`users/${uid}/money`).set(playerMoney + cData.amount);
@@ -283,8 +285,13 @@ function resetGame() {
 }
 
 function placeFood() {
-    food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
-    food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+    let isOccupied = true;
+    while(isOccupied) {
+        food.x = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+        food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+        // Fix lỗi thức ăn spawn đè lên người rắn
+        isOccupied = snake.some(part => part.x === food.x && part.y === food.y);
+    }
 }
 
 function gameLoop() {
@@ -443,9 +450,12 @@ document.getElementById('btn-back-menu').onclick = () => { if(confirm("Đầu h�
 // 7. BẢNG XẾP HẠNG ĐÔI & TOP 3 TỰ ĐỘNG
 // ==========================================
 let currentLbTab = 'score'; 
-let lbInterval, timerInterval;
 
-document.getElementById('btn-leaderboard').onclick = () => { switchScreen('leaderboard-screen'); startLeaderboard(); };
+document.getElementById('btn-leaderboard').onclick = () => { 
+    switchScreen('leaderboard-screen'); 
+    fetchLeaderboard(); // Tải BXH 1 lần, bỏ cơ chế refresh liên tục
+};
+
 document.getElementById('tab-score').onclick = () => { currentLbTab = 'score'; changeTab(); };
 document.getElementById('tab-money').onclick = () => { currentLbTab = 'money'; changeTab(); };
 
@@ -456,23 +466,21 @@ function changeTab() {
     fetchLeaderboard();
 }
 
-function startLeaderboard() {
-    fetchLeaderboard(); let timeLeft = 5;
-    clearInterval(lbInterval); clearInterval(timerInterval);
-    
-    timerInterval = setInterval(() => {
-        timeLeft--; document.getElementById('lb-timer').innerText = timeLeft;
-        if (timeLeft <= 0) { timeLeft = 5; fetchLeaderboard(); }
-    }, 1000);
-}
-
 function fetchLeaderboard() {
+    // Lấy đúng 10 người cao nhất
     db.ref('users').orderByChild(currentLbTab).limitToLast(10).once('value', snap => {
         const tbody = document.getElementById('leaderboard-body');
         let arr = []; snap.forEach(c => arr.push(c.val()));
+        
+        // Sắp xếp giảm dần để top 1 ở trên cùng
         arr.sort((a, b) => b[currentLbTab] - a[currentLbTab]);
         
         tbody.innerHTML = '';
+        if (arr.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3">Chưa có ai ghi danh!</td></tr>';
+            return;
+        }
+
         arr.forEach((p, i) => {
             let tr = document.createElement('tr');
             let color = i < 3 ? 'color:#ffb800; font-weight:bold; font-size: 18px;' : '';
@@ -486,19 +494,41 @@ function fetchLeaderboard() {
     });
 }
 
+// CƠ CHẾ THƯỞNG 30$ / 20$ / 10$ CHO TOP 3 MỖI TIẾNG
 function checkHourlyTop3() {
-    const HOUR = 3600000;
+    const HOUR = 3600000; // 1 Tiếng
     db.ref('storage_data/lastTop3Reward').once('value', snap => {
-        let lastTime = snap.val() || 0; let now = Date.now();
+        let lastTime = snap.val() || 0; 
+        let now = Date.now();
+        
         if (now - lastTime >= HOUR) {
             db.ref('storage_data/lastTop3Reward').set(now); 
+            
+            // Tìm 3 người điểm cao nhất
             db.ref('users').orderByChild('score').limitToLast(3).once('value', topSnap => {
-                topSnap.forEach(child => {
-                    let topUid = child.key; let p = child.val();
-                    db.ref(`users/${topUid}/score`).set(p.score + 20); 
-                    db.ref(`notifications/${topUid}`).push({         
-                        sender: "HỆ THỐNG", amount: 20, isRead: false, timestamp: now, message: "Thưởng TOP 3!"
-                    });
+                let arr = [];
+                topSnap.forEach(child => { arr.push({ uid: child.key, ...child.val() }); });
+                
+                // Sắp xếp lại để xác định chính xác TOP 1, 2, 3
+                arr.sort((a, b) => b.score - a.score);
+                
+                arr.forEach((p, index) => {
+                    let reward = 0;
+                    if (index === 0) reward = 30; // TOP 1
+                    else if (index === 1) reward = 20; // TOP 2
+                    else if (index === 2) reward = 10; // TOP 3
+                    
+                    if (reward > 0) {
+                        // Vừa cộng thêm điểm kỷ lục, vừa gửi $ vào hộp thư
+                        db.ref(`users/${p.uid}/score`).set(p.score + reward); 
+                        db.ref(`notifications/${p.uid}`).push({         
+                            sender: "HỆ THỐNG", 
+                            amount: reward, 
+                            isRead: false, 
+                            timestamp: now, 
+                            message: `Thưởng duy trì TOP ${index + 1} Điểm số!`
+                        });
+                    }
                 });
             });
         }
@@ -509,7 +539,7 @@ function checkHourlyTop3() {
 // 8. TIỆN ÍCH CHUYỂN MÀN HÌNH
 // ==========================================
 document.querySelectorAll('.btn-close-any').forEach(btn => {
-    btn.onclick = () => { switchScreen('menu-screen'); clearInterval(timerInterval); clearInterval(lbInterval); };
+    btn.onclick = () => { switchScreen('menu-screen'); };
 });
 document.getElementById('btn-transfer').onclick = () => switchScreen('transfer-screen');
 document.getElementById('btn-giftcode').onclick = () => switchScreen('code-screen');
