@@ -8,9 +8,69 @@
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
 <body>
+
+    <!-- =========================================
+         BẢNG BÊN TRÁI: SỰ KIỆN & CÁCH CHƠI
+    ========================================= -->
+    <div class="side-panel left-panel hidden-on-login">
+        <!-- Nút bật sự kiện -->
+        <button id="btn-show-event" class="btn primary pulse-btn">🎉 SỰ KIỆN HOT</button>
+        
+        <!-- Hướng dẫn cách chơi -->
+        <div class="info-box" style="margin-top: 20px;">
+            <h3 style="color: #ffb800; margin-bottom: 10px;">📖 CÁCH CHƠI</h3>
+            <p style="font-size: 14px; color: #a0c0d0; line-height: 1.5;">
+                Dùng phím <strong style="color: #00f5d4;">A, S, D, W</strong> hoặc <strong style="color: #00f5d4;">⬅️ ⬆️ ⬇️ ➡️</strong> để bẻ lái và bắt đầu di chuyển.
+                <br><br>
+                <span style="color:#ff2a6d; font-size:12px;">*Lưu ý: Rắn sẽ đứng im chờ lệnh lúc mới vào. Nếu bạn bấm đi ngược lại đầu rắn, rắn sẽ KHÔNG CHẾT mà chỉ đứng im chờ bạn bấm hướng khác!</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- =========================================
+         BẢNG BÊN PHẢI: SERVER / SELEVE (DANH SÁCH NGƯỜI CHƠI)
+    ========================================= -->
+    <div class="side-panel right-panel hidden-on-login">
+        <div class="info-box">
+            <h3 style="color: #00f5d4; margin-bottom: 5px; text-align: center;">🌐 SERVER (SELEVE)</h3>
+            <p style="font-size: 11px; color: #888; text-align: center; margin-bottom: 15px;">Xem tên người chơi để chuyển $</p>
+            
+            <div id="server-list" class="server-list scroll-list">
+                <!-- Danh sách Online/Offline sẽ được JS đổ vào đây -->
+                <div style="color:#00f5d4; text-align:center;">Đang quét server...</div>
+            </div>
+            
+            <div style="margin-top: 10px; font-size: 11px; color: #666; display: flex; justify-content: space-around;">
+                <span>🟢 Online (Sáng)</span>
+                <span>⚫ Offline (Xám)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         MODAL SỰ KIỆN (NỔI GIỮA MÀN HÌNH CÓ NÚT X)
+    ========================================= -->
+    <div id="event-modal" class="overlay-screen hidden">
+        <div class="modal-content" style="position: relative; max-width: 500px; text-align: left;">
+            <!-- Nút X tắt thông báo -->
+            <button id="btn-close-event" class="btn-close-x">✖</button>
+            
+            <h2 style="color: #00f5d4; text-shadow: 0 0 10px #00f5d4; margin-bottom: 20px; text-align: center;">🎊 THÔNG TIN SỰ KIỆN 🎊</h2>
+            
+            <div style="color: #fff; line-height: 1.8; font-size: 15px;">
+                <p>🌈 <strong>THÊM SKIN MỚI RAINBOW:</strong> Cần <strong>100$</strong> để mở khóa. Khi trang bị sẽ nhận ngay đặc quyền 1 lượt hồi sinh MIỄN PHÍ mỗi ván game!</p>
+                <hr style="border-color: #333; margin: 15px 0;">
+                <p>🏆 <strong>ĐUA TOP NHẬN QUÀ:</strong> Bảng xếp hạng Điểm và Tiền sẽ liên tục cập nhật. Ai đứng trong <strong>TOP 3</strong> trong vòng 1 tiếng sẽ nhận được phần thưởng $ thẳng vào Hộp Quà!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================
+         KHUNG GAME CHÍNH (Ở GIỮA)
+    ========================================= -->
     <div class="game-container">
         
-        <!-- THANH THÔNG TIN NGƯỜI CHƠI TỔNG (Luôn hiện trừ lúc login) -->
+        <!-- THANH THÔNG TIN NGƯỜI CHƠI TỔNG -->
         <div id="player-profile" class="player-profile hidden">
             <div class="profile-info">
                 👤 <span id="display-name">Đang tải...</span>
@@ -59,24 +119,21 @@
                     </label>
                 </div>
 
-                <!-- Chỗ chọn màu tự do -->
                 <div id="color-picker-box" class="color-picker-container" style="margin-top: 10px;">
                     <input type="color" id="custom-color-picker" value="#00f5d4">
                     <span class="color-hint">Bấm để pha màu Rắn</span>
                 </div>
 
-                <!-- Chỗ tải ảnh -->
                 <div id="image-upload-box" style="display: none; margin-top: 10px;">
                     <input type="file" id="skin-upload" accept="image/*" style="display: none;">
                     <button type="button" class="btn-upload" onclick="document.getElementById('skin-upload').click()">CHỌN ẢNH (-50$)</button>
                     <span class="color-hint" style="display:block; margin-top:5px; color:#ff2a6d;">Lưu ý: Chỉ trừ tiền khi bạn chọn ảnh thành công!</span>
                 </div>
 
-                <!-- Nút mua Rainbow -->
                 <button id="btn-buy-rainbow" class="btn secondary" style="font-size: 13px; padding: 10px; margin-top: 10px;">🔓 MỞ KHÓA RAINBOW (100$) - CÓ 1 LẦN HỒI SINH MIỄN PHÍ</button>
             </div>
 
-            <!-- Các nút tính năng Kinh tế & Game -->
+            <!-- Các nút tính năng -->
             <div class="menu-grid-buttons">
                 <button id="btn-start" class="btn primary grid-btn full-width">▶ CHƠI NGAY</button>
                 <button id="btn-leaderboard" class="btn secondary grid-btn">🏆 BXH</button>
@@ -120,11 +177,16 @@
             </div>
         </div>
 
-        <!-- MÀN HÌNH BẢNG XẾP HẠNG ĐÔI -->
+        <!-- MÀN HÌNH BẢNG XẾP HẠNG -->
         <div id="leaderboard-screen" class="screen hidden">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 10px;">
                 <h2 style="margin:0;">TOP CAO THỦ</h2>
-                <span style="color: #00f5d4; font-size: 12px; font-style: italic;">Làm mới: <span id="lb-timer">5</span>s</span>
+                <button id="btn-refresh-lb" class="btn primary" style="width: auto; padding: 6px 12px; font-size: 12px; margin: 0; box-shadow: 0 0 10px #00f5d4;">🔄 LÀM MỚI</button>
+            </div>
+            
+            <div style="width: 100%; text-align: center; margin-bottom: 15px; background: rgba(255, 42, 109, 0.1); padding: 8px; border: 1px dashed #ff2a6d; border-radius: 5px;">
+                <span style="color: #ffb800; font-size: 13px;">⏳ Chốt thưởng TOP 3 sau: </span>
+                <span id="hourly-countdown" style="color: #00f5d4; font-size: 18px; font-weight: bold; text-shadow: 0 0 8px #00f5d4; letter-spacing: 2px;">--:--</span>
             </div>
             
             <div class="tab-container">
@@ -144,7 +206,7 @@
                     <tr><td colspan="3" style="color:#00f5d4;">Đang tải dữ liệu...</td></tr>
                 </tbody>
             </table>
-            <p style="color: #ffb800; font-size: 12px; margin-bottom: 15px;">*Top 3 Điểm Số mỗi 1 tiếng được thưởng 20$ và 20 Điểm!</p>
+            <p style="color: #ffb800; font-size: 12px; margin-bottom: 15px;">*Thưởng TOP 3: 🥇 30$ | 🥈 20$ | 🥉 10$</p>
             <button class="btn primary btn-close-any">QUAY LẠI MENU</button>
         </div>
 
@@ -152,7 +214,7 @@
         <div id="inbox-screen" class="screen hidden">
             <h2>💌 HỘP QUÀ CỦA BẠN</h2>
             <div id="inbox-list" class="scroll-list">
-                <!-- Danh sách thư sẽ đổ vào đây -->
+                <!-- Danh sách thư -->
             </div>
             <button class="btn danger btn-close-any" style="margin-top: 20px;">QUAY LẠI</button>
         </div>
