@@ -44,7 +44,7 @@ let rainbowReviveUsed = false;
 let currentSkinType = 'color'; // 'color', 'custom', 'rainbow'
 let currentSkinValue = '#00f5d4';
 let customSkinImage = new Image();
-let rainbowHue = 0; // Để tạo hiệu ứng đổi màu 7 sắc
+let rainbowHue = 0;
 
 // UI Elements
 const els = {
@@ -107,12 +107,19 @@ function loadUserData() {
         }
     });
 
+    // Lắng nghe và đếm số Hộp Thư chưa đọc
     db.ref(`notifications/${uid}`).on('value', snap => {
         let unread = 0;
         snap.forEach(child => { if (!child.val().isRead) unread++; });
         const badge = document.getElementById('inbox-badge');
-        if (unread > 0) { badge.innerText = unread; badge.classList.remove('hidden'); }
-        else { badge.classList.add('hidden'); }
+        
+        // Fix cứng ép ẩn/hiện ngay lập tức không bị kẹt CSS
+        if (unread > 0) { 
+            badge.innerText = unread; 
+            badge.style.display = 'inline-block'; 
+        } else { 
+            badge.style.display = 'none'; 
+        }
     });
     setInterval(checkHourlyTop3, 60000); 
 }
@@ -167,20 +174,43 @@ document.getElementById('btn-submit-transfer').onclick = () => {
     });
 };
 
+// ==========================================
+// 🔥 XỬ LÝ HỘP THƯ - TỰ ĐỘNG XÓA SAU 24H
+// ==========================================
 document.getElementById('btn-inbox').onclick = () => {
     switchScreen('inbox-screen');
     db.ref(`notifications/${uid}`).once('value', snap => {
         const list = document.getElementById('inbox-list'); list.innerHTML = '';
         if (!snap.exists()) { list.innerHTML = '<p style="color:#888;">Hộp thư trống!</p>'; return; }
         
-        let msgs = []; snap.forEach(c => msgs.push({id: c.key, ...c.val()}));
+        let msgs = []; 
+        const now = Date.now();
+        const ONE_DAY = 24 * 60 * 60 * 1000; // 24 tiếng
+
+        snap.forEach(c => {
+            let msg = c.val();
+            // Nếu đã nhận tiền VÀ thời gian quá 24h -> Tự động xóa khỏi máy chủ luôn
+            if (msg.isRead && (now - msg.timestamp > ONE_DAY)) {
+                db.ref(`notifications/${uid}/${c.key}`).remove();
+            } else {
+                msgs.push({id: c.key, ...msg});
+            }
+        });
+        
+        if (msgs.length === 0) { list.innerHTML = '<p style="color:#888;">Hộp thư trống!</p>'; return; }
+
         msgs.reverse().forEach(msg => {
             let div = document.createElement('div'); div.className = 'inbox-item';
             div.innerHTML = `
                 <div><span class="sender">Từ: ${msg.sender}</span>
                 <span class="amount">+${msg.amount}$</span></div>
-                ${!msg.isRead ? `<button onclick="claimMail('${msg.id}', ${msg.amount})" class="btn primary" style="padding: 8px; margin-top: 10px; font-size:12px;">NHẬN TIỀN</button>` 
-                             : `<span style="color:#666; font-size:12px; float:right; margin-top:10px;">Đã nhận</span>`}
+                ${!msg.isRead 
+                    ? `<button onclick="claimMail('${msg.id}', ${msg.amount})" class="btn primary" style="padding: 8px; margin-top: 10px; font-size:12px;">NHẬN TIỀN</button>` 
+                    : `<div style="display:flex; justify-content:space-between; align-items:center; margin-top:10px;">
+                           <span style="color:#666; font-size:12px;">Đã nhận (Sẽ tự xóa sau 24h)</span>
+                           <button onclick="deleteMail('${msg.id}')" class="btn danger" style="padding: 4px 10px; font-size:11px; margin:0; width:auto;">XÓA</button>
+                       </div>`
+                }
             `;
             list.appendChild(div);
         });
@@ -189,10 +219,22 @@ document.getElementById('btn-inbox').onclick = () => {
 
 window.claimMail = function(mailId, amount) {
     db.ref(`users/${uid}/money`).set(playerMoney + amount);
-    db.ref(`notifications/${uid}/${mailId}/isRead`).set(true);
-    alert(`💰 Đã nhận ${amount}$ vào ví!`); document.getElementById('btn-inbox').click();
+    db.ref(`notifications/${uid}/${mailId}`).update({
+        isRead: true,
+        timestamp: Date.now() // Bắt đầu tính giờ 24h từ lúc bấm NHẬN
+    });
+    alert(`💰 Đã nhận ${amount}$ vào ví!`); 
+    document.getElementById('btn-inbox').click(); // Reload lại khung hộp thư
 };
 
+window.deleteMail = function(mailId) {
+    db.ref(`notifications/${uid}/${mailId}`).remove(); // Nút xóa thủ công
+    document.getElementById('btn-inbox').click(); // Reload lại
+};
+
+// ==========================================
+// NHẬP CODE
+// ==========================================
 document.getElementById('btn-submit-code').onclick = () => {
     let code = document.getElementById('giftcode-input').value.trim().toUpperCase();
     if(!code) return;
@@ -230,7 +272,7 @@ function resetGame() {
     dx = gridSize; dy = 0; nextDirection = { x: gridSize, y: 0 };
     score = 0; reviveCost = 1; rainbowReviveUsed = false; changingDirection = false; isGameOver = false;
     
-    isMoving = false; // 🔥 BẮT ĐẦU: RẮN ĐỨNG IM CHỜ LỆNH
+    isMoving = false; // ĐỨNG IM CHỜ LỆNH
     
     document.getElementById('current-score').innerText = score;
     els.reviveModal.classList.add('hidden');
@@ -248,11 +290,7 @@ function placeFood() {
 function gameLoop() {
     if (isGameOver) return;
     
-    // Nếu chưa bấm phím/vuốt, rắn chỉ vẽ nguyên tại chỗ (để nhấp nháy 7 màu)
-    if (!isMoving) {
-        draw(); 
-        return; 
-    }
+    if (!isMoving) { draw(); return; } // Chưa vuốt/bấm thì nằm im nhấp nháy 7 màu
     
     changingDirection = false; 
     dx = nextDirection.x; dy = nextDirection.y;
@@ -311,19 +349,16 @@ function draw() {
     });
 }
 
-// ==========================================
-// CƠ CHẾ ĐIỀU KHIỂN BẺ LÁI (PHÁT ĐỘNG IS_MOVING)
-// ==========================================
+// BẺ LÁI
 document.addEventListener('keydown', e => {
     if (isGameOver || changingDirection) return;
     const key = e.keyCode;
     if([37, 38, 39, 40].includes(key)) e.preventDefault(); 
     
-    // Nếu bấm đúng hướng hợp lệ -> Bật cờ isMoving = true để rắn bắt đầu phi
-    if (key === 37 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; isMoving = true;} // Trái
-    if (key === 38 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; isMoving = true;} // Lên
-    if (key === 39 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; isMoving = true;} // Phải
-    if (key === 40 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; isMoving = true;} // Xuống
+    if (key === 37 && dx !== gridSize) { nextDirection = {x: -gridSize, y: 0}; changingDirection = true; isMoving = true;} 
+    if (key === 38 && dy !== gridSize) { nextDirection = {x: 0, y: -gridSize}; changingDirection = true; isMoving = true;} 
+    if (key === 39 && dx !== -gridSize) { nextDirection = {x: gridSize, y: 0}; changingDirection = true; isMoving = true;} 
+    if (key === 40 && dy !== -gridSize) { nextDirection = {x: 0, y: gridSize}; changingDirection = true; isMoving = true;} 
 });
 
 let touchStartX = 0, touchStartY = 0;
@@ -363,7 +398,7 @@ function triggerDeath() {
     els.reviveModal.classList.remove('hidden');
 }
 
-// 🔥 NÚT HỒI SINH (RESTART THÂN RẮN & CHỜ LỆNH)
+// NÚT HỒI SINH
 document.getElementById('btn-do-revive').onclick = () => {
     let cost = (hasRainbow && !rainbowReviveUsed) ? 0 : reviveCost;
     
@@ -376,19 +411,14 @@ document.getElementById('btn-do-revive').onclick = () => {
         rainbowReviveUsed = true; 
     }
     
-    // Tái tạo lại con rắn nhỏ 3 đốt ở giữa màn hình
     snake = [ {x: 160, y: 160}, {x: 140, y: 160}, {x: 120, y: 160} ];
-    dx = gridSize; 
-    dy = 0; 
-    nextDirection = { x: gridSize, y: 0 };
-    
-    isMoving = false; // ĐƯA VỀ TRẠNG THÁI ĐỨNG IM CHỜ SẾP VUỐT
-    isGameOver = false;
+    dx = gridSize; dy = 0; nextDirection = { x: gridSize, y: 0 };
+    isMoving = false; isGameOver = false;
     
     els.reviveModal.classList.add('hidden');
     clearInterval(gameInterval);
     gameInterval = setInterval(gameLoop, gameSpeed); 
-    draw(); // Vẽ con rắn ra ngay để chuẩn bị
+    draw(); 
 };
 
 document.getElementById('btn-die').onclick = () => {
